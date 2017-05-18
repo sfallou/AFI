@@ -1,7 +1,8 @@
 import ics
 
-device = ics.find_devices(ics.NEODEVICE_VCAN3)[0]
-print(device.Name, device.SerialNumber)
+device = ics.find_devices()
+
+print(device[0].Name, device[0].SerialNumber)
 
 
 
