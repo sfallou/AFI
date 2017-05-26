@@ -25,7 +25,7 @@ def ask_config(datas):
 			print("Message sent on {}".format(bus.channel_info))
 		except can.CanError:
 			print("Message NOT sent")
-		time.sleep(0.5)
+		time.sleep(0.3)
       
 if __name__ == "__main__":
     #send_one()
