@@ -1,103 +1,107 @@
 # -*-coding:Utf-8 -*
-from __future__ import print_function
-import can
+
+from Tkinter import *
 import time
-from threading import Thread
-
-#can_interface = 'ics0can0'
-#bus = can.interface.Bus(can_interface, bustype='socketcan_ctypes')
-
  
-        
+class ScrollableCanvas(Frame):
+     def __init__(self, parent, *args, **kw):
+        Frame.__init__(self, parent, *args, **kw)
+         
+        canvas=Canvas(self,bg='#FFFFFF',width=300,height=300,scrollregion=(0,0,500,500))
+  
+        vbar=Scrollbar(self,orient=VERTICAL)
+        vbar.pack(side=RIGHT, fill=Y)
+        vbar.config(command=canvas.yview)
+         
+        canvas.config(width=450,height=300)
+        canvas.config(yscrollcommand=vbar.set)
+        canvas.pack(side=LEFT,expand=True,fill=BOTH)
+         
+        # create a frame inside the canvas which will be scrolled with it
+        self.interior = interior = Frame(canvas)
+        interior_id = canvas.create_window(0, 0, window=interior, anchor=NW )
+ 
+        # track changes to the canvas and frame width and sync them,
+        # also updating the scrollbar
+        def _configure_interior(event):
+            # update the scrollbars to match the size of the inner frame
+            size = (interior.winfo_reqwidth(), interior.winfo_reqheight())
+            canvas.config(scrollregion="0 0 %s %s" % size)
+            if interior.winfo_reqwidth() != canvas.winfo_width():
+                # update the canvas's width to fit the inner frame
+                canvas.config(width=interior.winfo_reqwidth())
+        interior.bind('<Configure>', _configure_interior)
+ 
+        def _configure_canvas(event):
+            if interior.winfo_reqwidth() != canvas.winfo_width():
+                # update the inner frame's width to fill the canvas
+                canvas.itemconfigure(interior_id, width=canvas.winfo_width())
+        canvas.bind('<Configure>', _configure_canvas)
+ 
+ 
+ 
+class Terminal(Frame):
+    # Init
+    def __init__(self, fenetre_principale=None):
+        Frame.__init__(self, fenetre_principale)
+        self.grid()
+        self.scrollable_canvas = ScrollableCanvas(self)
+        self.scrollable_canvas.grid(row=1,column=1)
+#####################################
 
+class Trame:
+    def __init__(self):
+        self.id=0
 
-class Communication(Thread):
-    def __init__(self,canal):
-        Thread.__init__(self)
-        self.can_interface = canal
-        self.bus = can.interface.Bus(self.can_interface, bustype='socketcan_ctypes')
+    def formatage_trame(self,fichier):
+        self.trames = []
+        self.timestamp = []
+        self.arbID = []
+        self.dlc = []
+        self.data = []
+        file = open(fichier,"r")
+        for line in file:
+            #resultat = []
+            tab = line.split()
+            self.timestamp.append(tab[1])
+            self.arbID.append(tab[3])
+            self.dlc.append(tab[6])
+            self.data.append(" ".join(tab[7:]))
+            self.trames.append(self.timestamp)
+            self.trames.append(self.arbID)
+            self.trames.append(self.dlc)
+            self.trames.append(self.data)
+        return self.trames
 
-    def formatage_trame(self,trame):
+    def formatage_trame2(self,fichier):
         self.resultat = []
-        self.tab = trame.split()
-        self.timestamp = tab[1]
-        self.arbID = tab[3]
-        self.dlc = tab[6]
-        self.data = " ".join(tab[7:])
-        self.resultat.append(timestamp)
-        self.resultat.append(arbID)
-        self.resultat.append(dlc)
-        self.resultat.append(data)
+        file = open(fichier,"r")
+        for line in file:
+            tab = line.split()
+            self.resultat.append([tab[1],tab[3],tab[6]," ".join(tab[7:])])
         return self.resultat
 
-    def reception_trame(self,duree):
-        file = open("trames.txt","w")
-        while 1:
-            message = self.bus.recv(duree)
-            if message is None:
-                break
-            else :
-                print(message)
-                info = str(message)+"\n" 
-                file.write(info)
-                compteur = compteur+1
+    def valeurs_config(self,fichier):
+        donnees_brutes = self.formatage_trame(fichier)[3] 
+        self.pn = donnees_brutes[1].replace(" ","")[8:14]+"-"+donnees_brutes[1].replace(" ","")[14:]
+        self.sn = donnees_brutes[3].replace(" ","")[8:].decode("hex")
+        self.sn = self.sn+donnees_brutes[5].replace(" ","")[8:14].decode("hex")
+        self.date_fab = donnees_brutes[13].replace(" ","")[8:12]+"/"+donnees_brutes[13].replace(" ","")[12:14]+"/"+donnees_brutes[13].replace(" ","")[14:]
+        self.crc_mep = donnees_brutes[25].replace(" ","")[8:]
+        self.crc_bbp = donnees_brutes[27].replace(" ","")[8:]
 
-        file.close()
+        return self.pn,self.sn,self.date_fab,self.crc_mep,self.crc_bbp
 
-    def read_config(self):
-        # Les données à envoyées
-        datas = [
-            [0x31, 0x00, 0x00, 0x14, 0x00, 0x00, 0x00, 0x00],
-            [0x31, 0x00, 0x00, 0x0C, 0x00, 0x00, 0x00, 0x00],
-            [0x31, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00],
-            [0x31, 0x00, 0x00, 0x30, 0x00, 0x00, 0x00, 0x00],
-            [0x31, 0x00, 0x00, 0x34, 0x00, 0x00, 0x00, 0x00],
-            [0x31, 0x00, 0x00, 0x18, 0x00, 0x00, 0x00, 0x00],
-            [0x31, 0x00, 0x00, 0x24, 0x00, 0x00, 0x00, 0x00],
-            [0x31, 0x00, 0x00, 0x38, 0x00, 0x00, 0x00, 0x00],
-            [0x31, 0x00, 0x01, 0x95, 0x00, 0x00, 0x00, 0x00],
-            [0x31, 0x00, 0x01, 0x99, 0x00, 0x00, 0x00, 0x00],
-            [0x31, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00],
-            [0x31, 0x00, 0x00, 0x3F, 0x00, 0x00, 0x00, 0x00],
-            [0x31, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00],
-            [0x31, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x00],
-        ]
-        messages = []
-        bus_can = can.interface.Bus()
-        for d in datas:
-            messages.append(can.Message(arbitration_id=0x7bf,data=d,extended_id=False))
-        for msg in messages:
-            try:
-                bus_can.send(msg)
-                print("Message sent on {}".format(bus_can.channel_info))
-            except can.CanError:
-                print("Message NOT sent")
-            time.sleep(0.3)
-
-    def run(self):
-        self.reception_trame(15)
-        self.read_config()
-        
-        
-
-        
+    #def reception(fichier):
 
 ##############################################################################
 
-if __name__ == '__main__':
-    #trame = Trame()
-    #msg = " Timestamp: 1495615614.564641        ID: 07bf    000    DLC: 8    31 00 00 14 00 00 00 00"
-    #print trame.formatage_trame(msg)
-
-    # création des threads
-    comm_1 = Communication('ics0can0')
-    comm_2 = Communication('ics0can0')
-
-    # Lancement des threads
-    comm_1.start()
-    comm_2.start()
-
-    # Attend que les threads se terminent
-    comm_1.join()
-    comm_2.join()
-
+if __name__ == "__main__":
+    trame= Trame()
+    datas = trame.formatage_trame2("trame.txt")
+    #print(trame.valeurs_config("trame.txt")[0])
+    root = Tk()
+    root.title("tk")
+    interface = Terminal(fenetre_principale=root)
+    #interface.ajouter_trame(datas[0],0)
+    interface.mainloop()
