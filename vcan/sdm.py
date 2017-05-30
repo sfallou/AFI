@@ -129,22 +129,22 @@ class SDM(Tk):
         self.labelLRU=Label(self.label_fRead,text="LRU Run Time", fg="#03224C", font=('Helvetica', self.taille_police), bg='white')
         self.labelLRU.grid(padx=2, row=3 ,column=2)
 
-        self.EntryPN=Entry(self.label_fRead, fg="#03224C", font=('Helvetica', self.taille_police), bg='white', width=self.taille_entry)
+        self.EntryPN=Entry(self.label_fRead,  font=('Helvetica', self.taille_police), bg='white', width=self.taille_entry)
         self.EntryPN.grid(padx=2, row=2 ,column=0)
 
-        self.EntrySN=Entry(self.label_fRead, fg="#03224C", font=('Helvetica', self.taille_police), bg='white', width=self.taille_entry)
+        self.EntrySN=Entry(self.label_fRead,  font=('Helvetica', self.taille_police), bg='white', width=self.taille_entry)
         self.EntrySN.grid(padx=2, row=2 ,column=1)
 
-        self.EntryDate=Entry(self.label_fRead, fg="#03224C", font=('Helvetica', self.taille_police), bg='white', width=self.taille_entry)
+        self.EntryDate=Entry(self.label_fRead,  font=('Helvetica', self.taille_police), bg='white', width=self.taille_entry)
         self.EntryDate.grid(padx=2, row=2 ,column=2)
 
-        self.EntryCRCMEP=Entry(self.label_fRead, fg="#03224C", font=('Helvetica', self.taille_police), bg='white', width=self.taille_entry)
+        self.EntryCRCMEP=Entry(self.label_fRead,  font=('Helvetica', self.taille_police), bg='white', width=self.taille_entry)
         self.EntryCRCMEP.grid(padx=2, row=4 ,column=0)
 
-        self.EntryCRCBBP=Entry(self.label_fRead, fg="#03224C", font=('Helvetica', self.taille_police), bg='white', width=self.taille_entry)
+        self.EntryCRCBBP=Entry(self.label_fRead, font=('Helvetica', self.taille_police), bg='white', width=self.taille_entry)
         self.EntryCRCBBP.grid(padx=2, row=4 ,column=1)
 
-        self.EntryLRU=Entry(self.label_fRead, fg="#03224C", font=('Helvetica', self.taille_police), bg='white', width=self.taille_entry)
+        self.EntryLRU=Entry(self.label_fRead, font=('Helvetica', self.taille_police), bg='white', width=self.taille_entry)
         self.EntryLRU.grid(padx=2, row=4 ,column=2)
 
         self.boutonReadConfig=Button(self.label_fRead,text="Lire la configuration des données NVM",bd=2, relief=RAISED, overrelief=RIDGE, bg='#C0C0C0', command=self.read_config)
@@ -164,7 +164,7 @@ class SDM(Tk):
         self.labelReadNbOctets=Label(self.label_fReadMemoire,text="Nombre d'octets ", fg="#03224C", font=('Helvetica', self.taille_police), bg='white')
         self.labelReadNbOctets.grid(padx=2, pady=2, row=0 ,column=1)
 
-        self.EntryReadCaseMemoire=Entry(self.label_fReadMemoire, fg="#03224C", font=('Helvetica', self.taille_police), bg='white', width=self.taille_entry)
+        self.EntryReadCaseMemoire=Entry(self.label_fReadMemoire,  font=('Helvetica', self.taille_police), bg='white', width=self.taille_entry)
         self.EntryReadCaseMemoire.grid(padx=2, row=1,column=0)
 
         #self.EntryReadNbOctets=Entry(self.label_fReadMemoire, fg="#03224C", font=('Helvetica', self.taille_police), bg='white', width=self.taille_entry)
@@ -191,13 +191,13 @@ class SDM(Tk):
         self.label_fWrite.pack_propagate(0)
         self.label_fWrite.pack(side=TOP)
 
-        self.EntryUpdatePN=Entry(self.label_fWrite, fg="#03224C", font=('Helvetica', self.taille_police), bg='white', width=self.taille_entry)
+        self.EntryUpdatePN=Entry(self.label_fWrite, font=('Helvetica', self.taille_police), bg='white', width=self.taille_entry)
         self.EntryUpdatePN.grid(padx=2, pady=2, row=0 ,column=0)
 
-        self.EntryUpdateSN=Entry(self.label_fWrite, fg="#03224C", font=('Helvetica', self.taille_police), bg='white', width=self.taille_entry)
+        self.EntryUpdateSN=Entry(self.label_fWrite, font=('Helvetica', self.taille_police), bg='white', width=self.taille_entry)
         self.EntryUpdateSN.grid(padx=2, pady=2, row=0 ,column=1)
 
-        self.EntryUpdateDate=Entry(self.label_fWrite, fg="#03224C", font=('Helvetica', self.taille_police), bg='white', width=self.taille_entry)
+        self.EntryUpdateDate=Entry(self.label_fWrite, font=('Helvetica', self.taille_police), bg='white', width=self.taille_entry)
         self.EntryUpdateDate.grid(padx=2, pady=2, row=0 ,column=2)
 
         self.boutonWritePN=Button(self.label_fWrite,text='Modifier PN',bd=2, relief=RAISED,  overrelief=RIDGE, bg='#C0C0C0')
@@ -212,7 +212,7 @@ class SDM(Tk):
         self.boutonRecupCRCMEP=Button(self.label_fWrite,text='Charger MEP CRC',bd=2, relief=RAISED,  overrelief=RIDGE, bg='#C0C0C0')
         self.boutonRecupCRCMEP.grid(padx=2, pady=2, row=2 ,column=0)
 
-        self.EntryRecupCRCMEP=Entry(self.label_fWrite, fg="#03224C", font=('Helvetica', self.taille_police), bg='white', width=self.taille_entry)
+        self.EntryRecupCRCMEP=Entry(self.label_fWrite,  font=('Helvetica', self.taille_police), bg='white', width=self.taille_entry)
         self.EntryRecupCRCMEP.grid(padx=2, pady=2, row=2 ,column=1)
 
         self.boutonWriteCRCMEP=Button(self.label_fWrite,text='Écrire MEP CRC',bd=2, relief=RAISED,  overrelief=RIDGE, bg='#C0C0C0')
@@ -232,10 +232,10 @@ class SDM(Tk):
         self.labelWriteDatas=Label(self.label_fWriteMemoire,text="Données ", fg="#03224C", font=('Helvetica', self.taille_police), bg='white')
         self.labelWriteDatas.grid(padx=2, pady=2, row=0 ,column=1)
 
-        self.EntryWriteCaseMemoire=Entry(self.label_fWriteMemoire, fg="#03224C", font=('Helvetica', self.taille_police), bg='white', width=self.taille_entry)
+        self.EntryWriteCaseMemoire=Entry(self.label_fWriteMemoire,  font=('Helvetica', self.taille_police), bg='white', width=self.taille_entry)
         self.EntryWriteCaseMemoire.grid(padx=2, row=1,column=0)
 
-        self.EntryWriteDatas=Entry(self.label_fWriteMemoire, fg="#03224C", font=('Helvetica', self.taille_police), bg='white', width=self.taille_entry)
+        self.EntryWriteDatas=Entry(self.label_fWriteMemoire,  font=('Helvetica', self.taille_police), bg='white', width=self.taille_entry)
         self.EntryWriteDatas.grid(padx=2, row=1 ,column=1)
 
         self.boutonWriteCaseMemoire=Button(self.label_fWriteMemoire,text="Lire",bd=2, relief=RAISED, overrelief=RIDGE, bg='#C0C0C0')
