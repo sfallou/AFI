@@ -2,7 +2,7 @@
 
 from Tkinter import *
 from tkMessageBox import *
-from classes import *
+#from classes import *
 
 import can
 import time                    ## Time-related library
@@ -27,8 +27,7 @@ class ReadConfig(threading.Thread):
                 info = str(message)+"\n" 
                 file.write(info)
         file.close() 
-        # on arrête le thread emission
-        #emission._stop()
+       
 
 class AskConfig(threading.Thread):
     def __init__(self):
@@ -65,7 +64,7 @@ class AskConfig(threading.Thread):
             time.sleep(0.3)
             
 
-class ReadContentMemory(threading.Thread):
+class ReadAdressMemory(threading.Thread):
     def __init__(self,interface):
         threading.Thread.__init__(self)
         self.interface = interface
@@ -83,38 +82,49 @@ class ReadContentMemory(threading.Thread):
                 info = str(message)+"\n" 
                 file.write(info)
         file.close() 
-        # on arrête le thread emission
-        #emission._stop()
+        
 
-class AskContentMemory(threading.Thread):
-    def __init__(self):
+class AskAdressMemory(threading.Thread):
+    def __init__(self,adr,taille,type_m):
         threading.Thread.__init__(self)
-        self.adresse = None
-        self.taille = None
-        self.type_memoire = None
+        self.adresse = adr
+        self.taille = taille
+        self.type_memoire = type_m
+        self.commande = ''
     
-	def set_infos(self,adresse,octet,type_memoire):
-		self.adresse = adresse
-		self.octet = octet
-		self.type_memoire = type_memoire
+    def run(self):
+		if self.taille == '4' and self.type_memoire == "NVM":
+			self.commande = 0x31
+		if self.taille == '4' and self.type_memoire == "RAM":
+			self.commande = 0x30
+		if self.taille == '4' and self.type_memoire == "FLASH":
+			self.commande = 0x32
+		if self.taille == '3' and self.type_memoire == "NVM":
+			self.commande = 0x21
+		if self.taille == '3' and self.type_memoire == "RAM":
+			self.commande = 0x20
+		if self.taille == '3' and self.type_memoire == "FLASH":
+			self.commande = 0x22
+		if self.taille == '2' and self.type_memoire == "NVM":
+			self.commande = 0x11
+		if self.taille == '2' and self.type_memoire == "RAM":
+			self.commande = 0x10
+		if self.taille == '2' and self.type_memoire == "FLASH":
+			self.commande = 0x12
+		if self.taille == '1' and self.type_memoire == "NVM":
+			self.commande = 0x01
+		if self.taille == '1' and self.type_memoire == "RAM":
+			self.commande = 0x00
+		if self.taille == '1' and self.type_memoire == "FLASH":
+			self.commande = 0x02
 		
-	def get_infos(self):
-		if self.taille == 4 and self.memoir == "nvm":
-			commande = 0x31
-		if self.taille == 3 :
-			commande = 0x31
-		if self.taille == 4 :
-			commande = 0x31
-		if self.taille == 4 :
-			commande = 0x31
-	
-    def run(self):Ò
-        data = [0x31, 0x00, 0x00, 0x14, 0x00, 0x00, 0x00, 0x00]
-        bus = can.interface.Bus()
+		d = [self.commande, 0x00, 0x00, self.adresse, 0x00, 0x00, 0x00, 0x00]
+		#print (d)
+		bus = can.interface.Bus()
 		msg = can.Message(arbitration_id=0x7bf,data=d,extended_id=False)
 		try:
 			bus.send(msg)
-        except can.CanError:
+		except can.CanError:
 			print("Message NOT sent")
 		time.sleep(0.3)
             
@@ -123,8 +133,13 @@ class AskContentMemory(threading.Thread):
 
 if __name__ == '__main__':
 	interface = 'ics0can0'
-	ask_config = AskConfig()
-	read_config = ReadConfig(interface)
-	read_config.start()
-	ask_config.start()
+	#ask_config = AskConfig()
+	#read_config = ReadConfig(interface)
+	#read_config.start()
+	#ask_config.start()
+	
+	ask_adress_memory = AskAdressMemory(0x14,'4',"NVM")
+	read_adress_memory = ReadAdressMemory(interface)
+	read_adress_memory.start()
+	ask_adress_memory.start()
 

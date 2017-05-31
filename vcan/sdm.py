@@ -4,6 +4,7 @@ from Tkinter import *
 from tkMessageBox import *
 from classes import *
 from terminal import *
+from communication import *
 import time                    ## Time-related library
 import threading               ## Threading-based Timer library
 import platform                ## Underlying platform’s info library
@@ -159,24 +160,34 @@ class SDM(Tk):
         self.label_fReadMemoire.pack(side=TOP)
 
         self.labelReadCaseMemoire=Label(self.label_fReadMemoire,text="Adresse Mémoire", fg="#03224C", font=('Helvetica', self.taille_police), bg='white')
-        self.labelReadCaseMemoire.grid(padx=2, pady=2, row=0 ,column=0)
+        self.labelReadCaseMemoire.grid(padx=2, pady=2, row=0 ,column=1)
+
+        self.labelTypeMemoire=Label(self.label_fReadMemoire,text="Mémoire ", fg="#03224C", font=('Helvetica', self.taille_police), bg='white')
+        self.labelTypeMemoire.grid(padx=2, pady=2, row=0 ,column=2)
+
 
         self.labelReadNbOctets=Label(self.label_fReadMemoire,text="Nombre d'octets ", fg="#03224C", font=('Helvetica', self.taille_police), bg='white')
-        self.labelReadNbOctets.grid(padx=2, pady=2, row=0 ,column=1)
+        self.labelReadNbOctets.grid(padx=2, pady=2, row=0 ,column=3)
 
+        Label(self.label_fReadMemoire,text="0x", fg="#03224C", font=('Helvetica', self.taille_police), bg='white').grid(padx=0, pady=2, row=1 ,column=0)
         self.EntryReadCaseMemoire=Entry(self.label_fReadMemoire,  font=('Helvetica', self.taille_police), bg='white', width=self.taille_entry)
-        self.EntryReadCaseMemoire.grid(padx=2, row=1,column=0)
+        self.EntryReadCaseMemoire.grid(ipadx=0, row=1,column=1,sticky=W)
 
         #self.EntryReadNbOctets=Entry(self.label_fReadMemoire, fg="#03224C", font=('Helvetica', self.taille_police), bg='white', width=self.taille_entry)
         #self.EntryReadNbOctets.grid(padx=2, row=1 ,column=1)
+
+        self.typeMemoire = StringVar(self.label_fReadMemoire)
+        self.typeMemoire.set("NVM")
+        self.EntryTypeMemoire=OptionMenu(self.label_fReadMemoire, self.typeMemoire,"RAM","FLASH","NVM")
+        self.EntryTypeMemoire.grid(padx=2, row=1 ,column=2)
         
         self.nbOctet = StringVar(self.label_fReadMemoire)
         self.nbOctet.set("4")
         self.EntryReadNbOctets=OptionMenu(self.label_fReadMemoire, self.nbOctet,"1","2","3","4")
-        self.EntryReadNbOctets.grid(padx=2, row=1 ,column=1)
+        self.EntryReadNbOctets.grid(padx=2, row=1 ,column=3)
 
-        self.boutonReadCaseMemoire=Button(self.label_fReadMemoire,text="Lire",bd=2, relief=RAISED, overrelief=RIDGE, bg='#C0C0C0')
-        self.boutonReadCaseMemoire.grid(padx=2, pady=2, row=1 ,column=2)
+        self.boutonReadCaseMemoire=Button(self.label_fReadMemoire,text="Lire",bd=2, relief=RAISED, overrelief=RIDGE, bg='#C0C0C0', command=self.read_memory)
+        self.boutonReadCaseMemoire.grid(padx=2, pady=2, row=1 ,column=4)
 
 
 
@@ -312,6 +323,18 @@ class SDM(Tk):
 
         self.EntryCRCBBP.delete(0,END)
         self.EntryCRCBBP.insert(0,self.CRC_BBP)
+
+    def read_memory(self):
+        memoire = int(self.EntryReadCaseMemoire.get(),16)
+        octet = self.nbOctet.get()
+        type_memoire = self.typeMemoire.get()
+        ask_adress_memory = AskAdressMemory(memoire,octet,type_memoire)
+        read_adress_memory = ReadAdressMemory('ics0can0')
+        read_adress_memory.start()
+        ask_adress_memory.start()
+        print(memoire)
+        print(octet)
+        print(type_memoire)
 
     def effacer(self):
         for widget in self.winfo_children():
