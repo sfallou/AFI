@@ -126,7 +126,7 @@ class AskAdressMemory(threading.Thread):
 			bus.send(msg)
 		except can.CanError:
 			print("Message NOT sent")
-		time.sleep(0.3)
+		#time.sleep(0.3)
             
 
 ##############################################################################

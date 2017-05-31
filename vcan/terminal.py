@@ -4,8 +4,10 @@
 - show the output in the GUI
 """
 import sys
+from itertools import islice
+from subprocess import Popen, PIPE
+from textwrap import dedent
 from threading import Thread
-from classes import *
 
 try:
     import Tkinter as tk
@@ -23,47 +25,57 @@ def iter_except(function, exception):
         return
 
 class DisplayLogs:
-    def __init__(self, root):
+    def __init__(self, root, cmd):
         self.root = root
-        #    Output chain: file.readline -> queue -> label)
-        q = Queue(maxsize=1024)  # limit output buffering
+        self.consigne = cmd
+
+        # start dummy subprocess to generate some output
+        self.process = Popen(self.consigne, stdout=PIPE)
+
+        # launch thread to read the subprocess output
+        #   (put the subprocess output into the queue in a background thread,
+        #    get output from the queue in the GUI thread.
+        #    Output chain: process.readline -> queue -> label)
+        q = Queue(maxsize=1024)  # limit output buffering (may stall subprocess)
         t = Thread(target=self.reader_thread, args=[q])
         t.daemon = True # close pipe if GUI process exits
         t.start()
 
+        # show subprocess' stdout in GUI
+        #self.label = tk.Label(root, text="  ", font=(None, 8))
+        #self.label.pack(ipadx=4, padx=4, ipady=4, pady=4, fill='both')
         self.update(q) # start update loop
 
     def reader_thread(self, q):
-        """Read file output and put it into the queue."""
+        """Read subprocess output and put it into the queue."""
         try:
-            fic = open("trame.txt","r")
-            for line in fic:
-                q.put(line)
+            with self.process.stdout as pipe:
+                for line in iter(pipe.readline, b''):
+                    q.put(line)
         finally:
             q.put(None)
 
     def update(self, q):
         """Update GUI with items from the queue."""
         for line in iter_except(q.get_nowait, Empty): # display all content
-            tk.Label(self.root.scrollable_canvas.interior, text=line, bg="white", font=(None,10)).pack(padx=2, fill='both')
-            break # display no more than one line per 40 milliseconds
+            if line is None:
+                #self.quit()
+                #return
+                pass
+            else:
+                #self.label['text'] = line # update GUI
+                tk.Label(self.root.scrollable_canvas.interior, text=line, font=(None,10)).pack(padx=2, fill='both')
+                break # display no more than one line per 40 milliseconds
         self.root.after(40, self.update, q) # schedule next update
 
     def quit(self):
-        #self.process.kill() # exit subprocess if GUI is closed (zombie!)
+        self.process.kill() # exit subprocess if GUI is closed (zombie!)
         self.root.destroy()
 
-##############################################################################
-
 if __name__ == '__main__':
-    interface = Tk()
-    interface.configure(bg='white')
-    root = Terminal(fenetre_principale=interface)
-
-    #root = tk.Tk()
-    #root.configure(bg="white")
-    app = DisplayLogs(root)
-    #root.protocol("WM_DELETE_WINDOW", app.quit)
+    root = tk.Tk()
+    app = DisplayLogs(root,['ls','-la'])
+    root.protocol("WM_DELETE_WINDOW", app.quit)
     # center window
-    #root.eval('tk::PlaceWindow %s center' % root.winfo_pathname(root.winfo_id()))
+    root.eval('tk::PlaceWindow %s center' % root.winfo_pathname(root.winfo_id()))
     root.mainloop()

@@ -294,18 +294,22 @@ class SDM(Tk):
         self.EntryLRU.delete(0,END)
 
     def read_config(self):
-        self.effacer_terminal()
-        self.effacer_zone_lecture()
-        self.trame= Trame()
-        # on affiche les logs
-        self.log = Terminal(fenetre_principale=self.label_fTerminal)
-        self.app =  DisplayLogs(self.log)
-
-        # on récupère les valeurs du PN,SN...
-        self.PN = self.trame.valeurs_config("trame.txt")[0]
-        self.SN = self.trame.valeurs_config("trame.txt")[1]
-        self.Date_Fab = self.trame.valeurs_config("trame.txt")[2]
-        self.CRC_MEP = self.trame.valeurs_config("trame.txt")[3]
+	ask_config = AskConfig()
+	read_config = ReadConfig('ics0can0')
+	read_config.start()
+	ask_config.start()
+	#time.sleep(10)
+	self.effacer_terminal()
+	self.effacer_zone_lecture()
+	self.trame= Trame()
+	# on affiche les logs
+	self.log = Terminal(fenetre_principale=self.label_fTerminal)
+	self.app =  DisplayLogs(self.log,['ls','-la'])
+	# on récupère les valeurs du PN,SN...
+	self.PN = self.trame.valeurs_config("trame.txt")[0]
+	self.SN = self.trame.valeurs_config("trame.txt")[1]
+	self.Date_Fab = self.trame.valeurs_config("trame.txt")[2]
+	self.CRC_MEP = self.trame.valeurs_config("trame.txt")[3]
         self.CRC_BBP = self.trame.valeurs_config("trame.txt")[4]
 
         # On affiche ces valeurs dans les cases prévues
@@ -328,13 +332,18 @@ class SDM(Tk):
         memoire = int(self.EntryReadCaseMemoire.get(),16)
         octet = self.nbOctet.get()
         type_memoire = self.typeMemoire.get()
+	
         ask_adress_memory = AskAdressMemory(memoire,octet,type_memoire)
         read_adress_memory = ReadAdressMemory('ics0can0')
         read_adress_memory.start()
         ask_adress_memory.start()
-        print(memoire)
-        print(octet)
-        print(type_memoire)
+	#time.sleep(5)
+        self.trame= Trame()
+        # on affiche les logs
+        self.effacer_terminal()
+        self.log = Terminal(fenetre_principale=self.label_fTerminal)
+        self.app =  DisplayLogs(self.log,['python','communication.py'])
+        
 
     def effacer(self):
         for widget in self.winfo_children():
