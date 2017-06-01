@@ -9,6 +9,8 @@ import time                    ## Time-related library
 import threading               ## Threading-based Timer library
 import sys
 
+
+
 class ReadConfig(threading.Thread):
     def __init__(self,interface):
         threading.Thread.__init__(self)
@@ -133,13 +135,14 @@ class AskAdressMemory(threading.Thread):
 
 if __name__ == '__main__':
 	interface = 'ics0can0'
-	#ask_config = AskConfig()
-	#read_config = ReadConfig(interface)
-	#read_config.start()
-	#ask_config.start()
+	ask_config = AskConfig()
+	read_config = ReadConfig(interface)
+	read_config.start()
+	ask_config.start()
 	
-	ask_adress_memory = AskAdressMemory(0x14,'4',"NVM")
-	read_adress_memory = ReadAdressMemory(interface)
-	read_adress_memory.start()
-	ask_adress_memory.start()
-
+	#ask_adress_memory = AskAdressMemory(0x14,'4',"NVM")
+	#read_adress_memory = ReadAdressMemory(interface)
+	#read_adress_memory.start()
+	#ask_adress_memory.start()
+	
+	

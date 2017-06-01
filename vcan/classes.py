@@ -7,7 +7,7 @@ class ScrollableCanvas(Frame):
      def __init__(self, parent, *args, **kw):
         Frame.__init__(self, parent, *args, **kw)
          
-        canvas=Canvas(self,bg='#FFFFFF',width=300,height=300,scrollregion=(0,0,500,500))
+        canvas=Canvas(self,bg='#FFFFFF',width=450,height=300,scrollregion=(0,0,450,300))
   
         vbar=Scrollbar(self,orient=VERTICAL)
         vbar.pack(side=RIGHT, fill=Y)

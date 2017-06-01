@@ -26,7 +26,7 @@ class SDM(Tk):
         self.menu()
         self.config_page()
         self.style()
-        self.initialiser_terminal()
+        #self.initialiser_terminal()
 
         #self.initialiser_interface()
 
@@ -253,24 +253,25 @@ class SDM(Tk):
         self.boutonWriteCaseMemoire.grid(padx=2, pady=2, row=1 ,column=2)
         
         # on initialise le terminal
-        self.initialiser_terminal()
+        #self.initialiser_terminal()
 
         #--------------------------------------------------------------------------
         # Terminal pour afficher les trames
         #---------------------------------------------------------------------------
-    def initialiser_terminal(self):
-        self.fTerminal = Frame(self.ZonePrincipale, width=300, height=300, bg='white')
+    """def initialiser_terminal(self):
+        self.fTerminal = Frame(self.ZonePrincipale, width=450, height=300, bg='white')
         self.fTerminal.grid_propagate(0)
         self.fTerminal.grid(padx=2, pady=2, row=0, column=1,rowspan=3)
 
-        self.label_fTerminal=LabelFrame(self.fTerminal,text="Terminal", fg="#03224C", font=('Helvetica', 20), bg='white')
-        #self.label_fTerminal.pack_propagate(0)
+        self.label_fTerminal=LabelFrame(self.fTerminal,text="Terminal", fg="#03224C", font=('Helvetica', 20), width=450, height=300, bg='white')
+        self.label_fTerminal.pack_propagate(0)
         self.label_fTerminal.pack(side=TOP)
        
         self.terminal=Canvas(self.label_fTerminal, width=450, height=300, bg='white', relief=SUNKEN)
+	self.terminal.pack_propagate(0)
         self.terminal.pack(fill=BOTH)
         
-        
+
 
         #--------------------------------------------------------------------------
         # Zone des boutons optionnels
@@ -284,7 +285,7 @@ class SDM(Tk):
     def effacer_terminal(self):
         for widget in self.label_fTerminal.winfo_children():
             widget.destroy()
-
+    """
     def effacer_zone_lecture(self):
         self.EntryPN.delete(0,END)
         self.EntrySN.delete(0,END)
@@ -298,13 +299,13 @@ class SDM(Tk):
 	read_config = ReadConfig('ics0can0')
 	read_config.start()
 	ask_config.start()
-	#time.sleep(10)
-	self.effacer_terminal()
+	
+	#self.effacer_terminal()
 	self.effacer_zone_lecture()
 	self.trame= Trame()
 	# on affiche les logs
-	self.log = Terminal(fenetre_principale=self.label_fTerminal)
-	self.app =  DisplayLogs(self.log,['ls','-la'])
+	#self.log = Terminal(fenetre_principale=self.label_fTerminal)
+	#self.app =  DisplayLogs(self.log,['more','configuration.txt'])
 	# on récupère les valeurs du PN,SN...
 	self.PN = self.trame.valeurs_config("trame.txt")[0]
 	self.SN = self.trame.valeurs_config("trame.txt")[1]
@@ -337,12 +338,12 @@ class SDM(Tk):
         read_adress_memory = ReadAdressMemory('ics0can0')
         read_adress_memory.start()
         ask_adress_memory.start()
-	#time.sleep(5)
+	
         self.trame= Trame()
         # on affiche les logs
-        self.effacer_terminal()
-        self.log = Terminal(fenetre_principale=self.label_fTerminal)
-        self.app =  DisplayLogs(self.log,['python','communication.py'])
+        #self.effacer_terminal()
+        #self.log = Terminal(fenetre_principale=self.label_fTerminal)
+        #self.app =  DisplayLogs(self.log,['python','communication.py'])
         
 
     def effacer(self):
