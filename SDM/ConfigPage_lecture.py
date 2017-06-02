@@ -97,9 +97,6 @@ class Lecture(Frame):
         self.EntryReadCaseMemoire=Entry(self.label_fReadMemoire,  font=fontSimple, bg=bgColor, width=entryLength)
         self.EntryReadCaseMemoire.grid(ipadx=0, row=1,column=1,sticky=W)
 
-        #self.EntryReadNbOctets=Entry(self.label_fReadMemoire, fg="#03224C", font=('Helvetica', self.taille_police), bg='white', width=self.taille_entry)
-        #self.EntryReadNbOctets.grid(padx=2, row=1 ,column=1)
-
         self.typeMemoire = StringVar(self.label_fReadMemoire)
         self.typeMemoire.set("NVM")
         self.EntryTypeMemoire=OptionMenu(self.label_fReadMemoire, self.typeMemoire,"RAM","FLASH","NVM")
@@ -112,7 +109,10 @@ class Lecture(Frame):
 
         self.boutonReadCaseMemoire=Button(self.label_fReadMemoire,text="Lire",bd=2, relief=RAISED, overrelief=RIDGE, bg=buttonColor, command=self.read_memory)
         self.boutonReadCaseMemoire.grid(padx=2, pady=2, row=1 ,column=4)
-
+	#######################################################
+	### un petit terminal pour lire les trames
+	self.terminal = Text(self)
+	self.terminal.pack()
 
 
         
@@ -126,13 +126,26 @@ class Lecture(Frame):
 
     def read_config(self):
         self.effacer_zone_lecture()
+	# On fait aux threads AskConfig et ReadConfig
+	interface = 'ics0can0'
+	ask_config = AskConfig()
+	read_config = ReadConfig(interface,self.terminal,self.EntryPN,self.EntrySN,self.EntryDate,self.EntryCRCMEP,self.EntryCRCBBP,self.EntryLRU)
+	read_config.start()
+	ask_config.start()
+	# on fait une petite pause le temps que configuration.txt soit crée
+	"""duration = 6
+	#time.sleep(5)
+	#while read_config.isAlive():
+	#    duration = duration+1
+	time.sleep(duration)
         # on récupère les valeurs du PN,SN...
-	self.trame = Trame()
-        self.PN = self.trame.valeurs_config("trame.txt")[0]
-        self.SN = self.trame.valeurs_config("trame.txt")[1]
-        self.Date_Fab = self.trame.valeurs_config("trame.txt")[2]
-        self.CRC_MEP = self.trame.valeurs_config("trame.txt")[3]
-        self.CRC_BBP = self.trame.valeurs_config("trame.txt")[4]
+	fichier = "configuration.txt"
+	self.trame= Trame()
+        self.PN = self.trame.valeurs_config(fichier)[0]
+        self.SN = self.trame.valeurs_config(fichier)[1]
+        self.Date_Fab = self.trame.valeurs_config(fichier)[2]
+        self.CRC_MEP = self.trame.valeurs_config(fichier)[3]
+        self.CRC_BBP = self.trame.valeurs_config(fichier)[4]
 
         # On affiche ces valeurs dans les cases prévues
         self.EntryPN.delete(0,END)
@@ -149,18 +162,18 @@ class Lecture(Frame):
 
         self.EntryCRCBBP.delete(0,END)
         self.EntryCRCBBP.insert(0,self.CRC_BBP)
-
+	"""
     def read_memory(self):
         memoire = int(self.EntryReadCaseMemoire.get(),16)
         octet = self.nbOctet.get()
         type_memoire = self.typeMemoire.get()
     
         ask_adress_memory = AskAdressMemory(memoire,octet,type_memoire)
-        read_adress_memory = ReadAdressMemory('ics0can0')
+        read_adress_memory = ReadAdressMemory('ics0can0',self.terminal)
         read_adress_memory.start()
         ask_adress_memory.start()
     
-        self.trame= Trame()
+        
         
 
     def effacer(self):

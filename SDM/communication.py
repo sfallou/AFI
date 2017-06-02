@@ -12,21 +12,58 @@ import sys
 
 
 class ReadConfig(threading.Thread):
-    def __init__(self,interface):
+    def __init__(self,interface,terminal,entry_pn,entry_sn,entry_date_fab,entry_crc_mep,entry_crc_bbp,entry_lru):
         threading.Thread.__init__(self)
         self.interface = interface
+	self.terminal = terminal
+	self.entry_pn =entry_pn
+	self.entry_sn =entry_sn
+	self.entry_date_fab =entry_date_fab
+	self.entry_crc_mep =entry_crc_mep
+	self.entry_crc_bbp =entry_crc_bbp
+	self.entry_lru =entry_lru
 
     def run(self):
         can_interface = self.interface
         bus = can.interface.Bus(can_interface, bustype='socketcan_ctypes')
         file = open("configuration.txt","w")
+	tab =[]
         while 1:
             message = bus.recv(1)
             if message is None:
                 break   
             else :
                 print(message)
-                info = str(message)+"\n" 
+                info = str(message)+"\n"
+		self.terminal.insert(INSERT, info) 
+		tab.append(info)
+		if len(tab)==2:
+		    pn = (tab[1][77:86]+"-"+tab[1][86:88]).replace(" ","")
+		    print("pn: ",pn)
+		    self.entry_pn.delete(0,END)
+		    self.entry_pn.insert(0,pn)
+		if len(tab)==6:
+		    sn = (tab[3][77:88]).replace(" ","")+(tab[5][77:88]).replace(" ","")
+		    sn = sn.decode("hex")
+		    print("sn: ", sn)
+		    self.entry_sn.delete(0,END)
+		    self.entry_sn.insert(0,sn)
+		if len(tab)==14:
+		    date_fab = (tab[13][77:83]+"-"+tab[13][83:86]+"-"+tab[13][86:88]).replace(" ","")
+		    print("date fabrication: ", date_fab)
+		    self.entry_date_fab.delete(0,END)
+		    self.entry_date_fab.insert(0,date_fab)
+		if len(tab)==26:
+		    crc_mep = (tab[25][77:88]).replace(" ","")
+		    print("crc mep: ", crc_mep)
+		    self.entry_crc_mep.delete(0,END)
+		    self.entry_crc_mep.insert(0,crc_mep)
+		if len(tab)==28:
+		    crc_bbp = (tab[27][77:88]).replace(" ","")
+		    print("crc bbp: ", crc_bbp)
+		    self.entry_crc_bbp.delete(0,END)
+		    self.entry_crc_bbp.insert(0,crc_bbp)
+		   
                 file.write(info)
         file.close() 
        
@@ -67,9 +104,10 @@ class AskConfig(threading.Thread):
             
 
 class ReadAdressMemory(threading.Thread):
-    def __init__(self,interface):
+    def __init__(self,interface,terminal):
         threading.Thread.__init__(self)
         self.interface = interface
+	self.terminal = terminal
 
     def run(self):
         can_interface = self.interface
@@ -82,6 +120,7 @@ class ReadAdressMemory(threading.Thread):
             else :
                 print(message)
                 info = str(message)+"\n" 
+		self.terminal.insert(INSERT, info)
                 file.write(info)
         file.close() 
         
