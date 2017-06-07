@@ -8,12 +8,13 @@ from communication import *
 import time                    ## Time-related library
 import threading               ## Threading-based Timer library
 import platform                ## Underlying platform’s info library
+import ConfigPage_terminal as Terminal
 
 bgColor = 'white' # Background color
 fgColor = "#03224C" 
 WinWidth = 400 # largeur fenetre
 WinHigh = 200 # hauteur fenetre
-titreFont = ('Helvetica', 20) # Police des Titres 
+titreFont = ('Helvetica', 14) # Police des Titres 
 fontSimple =('Helvetica', 12) # police des textes basiques
 entryLength = 10 # Taille des Entry
 buttonLength = 10 # Taille des boutons
@@ -32,9 +33,13 @@ class Lecture(Frame):
 	self.widget_lecture()
     
     def widget_lecture(self):
-        self.label_fRead=LabelFrame(self,text="Lecture", fg=fgColor, font=titreFont, bg=bgColor)
-        self.label_fRead.pack_propagate(0)
+	self.fReadConfig = Frame(self, bg=bgColor)
+	self.fReadConfig.grid(row=0,column=0)
+	
+        self.label_fRead=LabelFrame(self.fReadConfig,text="Configuration", fg=fgColor, font=titreFont, bg=bgColor)
+        #self.label_fRead.grid_propagate(0)
         self.label_fRead.pack(side=TOP)
+	#self.label_fRead.grid(row=0,column=0)
 
         self.labelPN=Label(self.label_fRead,text="Part Number", fg=fgColor, font=fontSimple, bg=bgColor)
         self.labelPN.grid(padx=2, row=1 ,column=0)
@@ -74,10 +79,11 @@ class Lecture(Frame):
 
         self.boutonReadConfig=Button(self.label_fRead,text="Lire la configuration des données NVM",bd=2, relief=RAISED, overrelief=RIDGE, bg=buttonColor, command=self.read_config)
         self.boutonReadConfig.grid(padx=2, pady=2, row=5 ,column=0, columnspan=3)
-
-        self.fReadMemoire = Frame(self.label_fRead, bg=bgColor)
-        self.fReadMemoire.grid_propagate(0)
-        self.fReadMemoire.grid(padx=2, pady=2, row=6 ,column=0, columnspan=3)
+	
+	############################################
+        self.fReadMemoire = Frame(self, bg=bgColor)
+        #self.fReadMemoire.pack(pady=2)
+	self.fReadMemoire.grid(row=1,column=0)
 
         self.label_fReadMemoire=LabelFrame(self.fReadMemoire,text="Lire une case mémoire", fg=fgColor, font=titreFont, bg=bgColor)
         self.label_fReadMemoire.pack_propagate(0)
@@ -108,11 +114,13 @@ class Lecture(Frame):
         self.EntryReadNbOctets.grid(padx=2, row=1 ,column=3)
 
         self.boutonReadCaseMemoire=Button(self.label_fReadMemoire,text="Lire",bd=2, relief=RAISED, overrelief=RIDGE, bg=buttonColor, command=self.read_memory)
-        self.boutonReadCaseMemoire.grid(padx=2, pady=2, row=1 ,column=4)
+        self.boutonReadCaseMemoire.grid(padx=2, pady=4, row=2 ,column=0, columnspan=4)
+	
 	#######################################################
 	### un petit terminal pour lire les trames
-	self.terminal = Text(self)
-	self.terminal.pack()
+	self.terminal = Text(self,width=90)
+	#self.terminal.pack(pady=5)
+	self.terminal.grid(pady=5,row=2,column=0)
 
 
         
@@ -132,46 +140,17 @@ class Lecture(Frame):
 	read_config = ReadConfig(interface,self.terminal,self.EntryPN,self.EntrySN,self.EntryDate,self.EntryCRCMEP,self.EntryCRCBBP,self.EntryLRU)
 	read_config.start()
 	ask_config.start()
-	# on fait une petite pause le temps que configuration.txt soit crée
-	"""duration = 6
-	#time.sleep(5)
-	#while read_config.isAlive():
-	#    duration = duration+1
-	time.sleep(duration)
-        # on récupère les valeurs du PN,SN...
-	fichier = "configuration.txt"
-	self.trame= Trame()
-        self.PN = self.trame.valeurs_config(fichier)[0]
-        self.SN = self.trame.valeurs_config(fichier)[1]
-        self.Date_Fab = self.trame.valeurs_config(fichier)[2]
-        self.CRC_MEP = self.trame.valeurs_config(fichier)[3]
-        self.CRC_BBP = self.trame.valeurs_config(fichier)[4]
 
-        # On affiche ces valeurs dans les cases prévues
-        self.EntryPN.delete(0,END)
-        self.EntryPN.insert(0,self.PN)
-
-        self.EntrySN.delete(0,END)
-        self.EntrySN.insert(0,self.SN)
-
-        self.EntryDate.delete(0,END)
-        self.EntryDate.insert(0,self.Date_Fab)
-
-        self.EntryCRCMEP.delete(0,END)
-        self.EntryCRCMEP.insert(0,self.CRC_MEP)
-
-        self.EntryCRCBBP.delete(0,END)
-        self.EntryCRCBBP.insert(0,self.CRC_BBP)
-	"""
     def read_memory(self):
-        memoire = int(self.EntryReadCaseMemoire.get(),16)
-        octet = self.nbOctet.get()
-        type_memoire = self.typeMemoire.get()
+	if type(int(self.EntryReadCaseMemoire.get(),16)) == type(1):
+	    memoire = int(self.EntryReadCaseMemoire.get(),16)
+	    octet = self.nbOctet.get()
+	    type_memoire = self.typeMemoire.get()
     
-        ask_adress_memory = AskAdressMemory(memoire,octet,type_memoire)
-        read_adress_memory = ReadAdressMemory('ics0can0',self.terminal)
-        read_adress_memory.start()
-        ask_adress_memory.start()
+	    ask_adress_memory = AskAdressMemory(memoire,octet,type_memoire)
+	    read_adress_memory = ReadAdressMemory('ics0can0',self.terminal)
+	    read_adress_memory.start()
+	    ask_adress_memory.start()
     
         
         
