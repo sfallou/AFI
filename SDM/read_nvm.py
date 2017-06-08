@@ -22,24 +22,32 @@ tailleBorder = 2 # borderwidth
 
 
 class ReadConfig(threading.Thread):
-    def __init__(self,interface,terminal):
+    def __init__(self,interface,terminal, bar):
         threading.Thread.__init__(self)
         self.interface = interface
 	self.terminal = terminal
+	self.progressBar = bar
 
     def run(self):
         can_interface = self.interface
         bus = can.interface.Bus(can_interface, bustype='socketcan_ctypes')
         file = open("resultat.txt","w")
+	#progressBar
+	self.progressBar["value"] = 0
+	self.progressBar["maximum"] = 504
+	i=0
+	
         while 1:
             message = bus.recv(1)
             if message is None:
                 break   
             else :
+		i +=1
                 print(message)
 		info = str(message)+"\n"
 		self.terminal.insert('0.0', info)
                 file.write(info)
+		self.progressBar["value"] = i
         file.close() 
        
 

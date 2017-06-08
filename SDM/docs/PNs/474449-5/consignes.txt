@@ -1,0 +1,19 @@
+KIDDE AEROSPACE & DEFENSE COMPONENT MAINTENANCE MANUAL PART NUMBER 474449-5
+
+1) Brancher l'équipement au cordon TEL150082
+
+2) Vérifier que le connecteur USB gris est bien branché
+
+3) Mettre l'équpement en mode sol :
+    
+    -> Mettre ID0 , ID1, ID2, ID3 et PAR sur ON (HAUT)
+    
+4) Mettre l'alimentation sur 28V
+    
+5) Mettre le Power sur ON
+
+6) Dans le logiciel, cliquer sur le bouton "Lancer le test" pour faire le test de reception
+
+7) Sauvegrder le contenu du NVM en cliquant sur le bouton "Sauvegarder "
+
+8) Le fichier est sauvegardé dans le dossier ..... sous le nom ......

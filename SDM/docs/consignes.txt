@@ -11,9 +11,5 @@ KIDDE AEROSPACE & DEFENSE COMPONENT MAINTENANCE MANUAL PART NUMBER 474560-1x
 4) Mettre l'alimentation sur 28V
     
 5) Mettre le Power sur ON
+    
 
-6) Dans le logiciel, cliquer sur le bouton "Lancer le test" pour faire le test de reception
-
-7) Sauvegrder le contenu du NVM en cliquant sur le bouton "Sauvegarder "
-
-8) Le fichier est sauvegardé dans le dossier ..... sous le nom ......
