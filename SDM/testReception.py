@@ -3,7 +3,7 @@
 from Tkinter import *
 from tkMessageBox import *
 
-
+from read_nvm import *
 
 bgColor = 'white' # Background color
 fgColor = "#03224C" 
@@ -25,6 +25,7 @@ class TestReception(Frame):
 	self.configure(bg=bgColor)
 	self.couleurSignal1 = "grey"
 	self.couleurSignal2 = "grey"
+	self.PN = ""
 	# Les différentes zone de l'interface initialisées au démarrage
 	self.init_interface()
 	
@@ -42,7 +43,7 @@ class TestReception(Frame):
 	###### Fêntre 1 #########
 	
 	# Type de PN (menu déroulant)
-	choix = ["474560-1/11","474560-2X","474560-4/5","475571-X","474449-1/5"]
+	choix = ["474560-1x","474560-2x","474560-4x-5x","475571-X","474449-5"]
 	self.choixPN = StringVar(self.fenetre1)
         self.choixPN.set("Choisir le type de PN")
         self.EntryChoixPN=OptionMenu(self.fenetre1, self.choixPN,*choix)
@@ -52,11 +53,19 @@ class TestReception(Frame):
 	self.boutonValider=Button(self.fenetre1,text="Valider",bd=2, relief=RAISED, overrelief=RIDGE, bg=buttonColor, command=self.valider_choix)
         self.boutonValider.pack(pady=5)
 	
+
+	
 	# Zone de Text pour les consignes à appliqué
-	self.labelConsigne = Label(self.fenetre1,text="Consignes", fg=fgColor, font=titreFont, bg=bgColor)
-        self.labelConsigne.pack()
-	self.textConsigne = Text(self.fenetre1, height=13, width=30,font=("consolas",11))
-	self.textConsigne.pack()
+	self.frame0 = Frame(self.fenetre1,bg=bgColor) # sert à bien arranger les widgets de cette zone
+	self.frame0.pack(pady=5)
+	self.labelConsigne = Label(self.frame0,text="Consignes", fg=fgColor, font=titreFont, bg=bgColor)
+        self.labelConsigne.grid(row=0,column=0)
+	self.textConsigne = Text(self.frame0, height=35, width=50,font=("consolas",8))
+	self.textConsigne.grid(row=1,column=0)
+	# le scrollbar
+	self.scrollbar = Scrollbar(self.frame0, command=self.textConsigne.yview)
+	self.scrollbar.grid(row=1,column=1,sticky="nsew")
+	self.textConsigne['yscrollcommand'] = self.scrollbar.set
 	
 	# Bouton continuer
 	self.boutonContinuer=Button(self.fenetre1,text="Continuer",bd=2, relief=RAISED, overrelief=RIDGE, bg=buttonColor, command=self.ouvrir_appli)
@@ -163,7 +172,7 @@ class TestReception(Frame):
 	# Zone de Text pour les logs
 	self.labelLogs = Label(self.fenetre3,text="Logs", fg=fgColor, font=titreFont, bg=bgColor)
         self.labelLogs.grid(row=2,column=0)
-	self.textLogs = Text(self.fenetre3, height=6, width=40,font=("consolas",11))
+	self.textLogs = Text(self.fenetre3, height=6, width=40,font=("consolas",8))
 	self.textLogs.grid(row=3,column=0)
 	# le scrollbar
 	self.scrollb = Scrollbar(self.fenetre3, command=self.textLogs.yview)
@@ -182,7 +191,9 @@ class TestReception(Frame):
 	try:
 	    choix_pn = self.choixPN.get()
 	    if choix_pn  != "Choisir le type de PN":
+		self.PN = choix_pn
 		self.boutonContinuer.configure(state=NORMAL)
+		
 		
 	except Exception as error:
 	    print('Erreur de saisie: ' + repr(error))
@@ -194,7 +205,12 @@ class TestReception(Frame):
     
     
     def loading(self):
-	pass
+	# on lance le test et on affiche les trames CAN dans la zone logs
+	interface = 'ics0can0'
+	ask_config = AskConfig()
+	read_config = ReadConfig(interface,self.textLogs)
+	read_config.start()
+	ask_config.start()
     
     def disable_fenetre(self,widget,state='disabled'):
 	try:
