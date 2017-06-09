@@ -22,16 +22,22 @@ tailleBorder = 2 # borderwidth
 
 
 class ReadConfig(threading.Thread):
-    def __init__(self,interface,terminal, bar):
+    def __init__(self,interface,terminal,bar,pn,sn,date,crc_bbp_ref,crc_bbp_calc,crc_bbp_actu,signal1,crc_mep_ref,crc_mep_calc,crc_mep_actu,signal2,prog,faults):
         threading.Thread.__init__(self)
         self.interface = interface
 	self.terminal = terminal
 	self.progressBar = bar
+	self.pn,self.sn,self.date = pn,sn,date
+	self.crc_bbp_ref,self.crc_bbp_calc,self.crc_bbp_actu = crc_bbp_ref,crc_bbp_calc,crc_bbp_actu
+	self.signal1,self.signal2 = signal1,signal2
+	self.crc_mep_ref,self.crc_mep_calc,self.crc_mep_actu = crc_mep_ref,crc_mep_calc,crc_mep_actu
+	self.prog = prog
+	self.faults = faults
 
     def run(self):
         can_interface = self.interface
         bus = can.interface.Bus(can_interface, bustype='socketcan_ctypes')
-        file = open("resultat.txt","w")
+        file = open("resultat_nvm.txt","w")
 	#progressBar
 	self.progressBar["value"] = 0
 	self.progressBar["maximum"] = 504
@@ -46,9 +52,22 @@ class ReadConfig(threading.Thread):
                 print(message)
 		info = str(message)+"\n"
 		self.terminal.insert('0.0', info)
-                file.write(info)
+		if info[40:44]=="07ff":
+		    file.write(info)
 		self.progressBar["value"] = i
-        file.close() 
+        file.close()
+	file = open("resultat_nvm.txt","r")
+	tab = file.readlines()
+	for i in range (len(tab)):
+	    if i==5:
+		self.pn.delete(0,END)
+		self.pn.insert(0,(tab[i][77:86]+"-"+tab[i][86:88]).replace(" ",""))
+	    if i==4:
+		    sn = (tab[i-1][77:88]).replace(" ","")+(tab[4][77:88]).replace(" ","")
+		    sn = sn.decode("hex")
+		    self.sn.delete(0,END)
+		    self.sn.insert(0,sn)
+	
        
 
 class AskConfig(threading.Thread):

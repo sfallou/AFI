@@ -3,9 +3,8 @@
 from Tkinter import *
 from tkMessageBox import *
 import ttk
-
+import ics
 from read_nvm import *
-
 from subprocess import Popen, PIPE
 import os
 import time                    ## Time-related library
@@ -120,8 +119,8 @@ class TestReception(Frame):
 	self.frame2 = Frame(self.fenetre2,bg=bgColor) # sert à bien arranger les labels et les entry bbcrc ...
 	self.frame2.pack(pady=5)
 	
-	self.labelBBPCRC_Ref = Label(self.frame2,text="CRC BBP Réf ", fg=fgColor, font=fontSimple, bg=bgColor)
-        self.labelBBPCRC_Ref.grid(padx=2,pady=2,row=0,column=0)
+	self.labelBBPCRC_ref = Label(self.frame2,text="CRC BBP Réf ", fg=fgColor, font=fontSimple, bg=bgColor)
+        self.labelBBPCRC_ref.grid(padx=2,pady=2,row=0,column=0)
 	
 	self.labelBBPCRC_calc = Label(self.frame2,text="CRC BBP calculé", fg=fgColor, font=fontSimple, bg=bgColor)
         self.labelBBPCRC_calc.grid(padx=2,pady=2,row=0,column=1)
@@ -144,8 +143,8 @@ class TestReception(Frame):
 	self.canvas.create_oval(0,0,35,35, fill=self.couleurSignal2)
 	
 	##
-	self.labelMEPCRC_Ref = Label(self.frame2,text="CRC MEPP Réf ", fg=fgColor, font=fontSimple, bg=bgColor)
-        self.labelMEPCRC_Ref.grid(padx=2,pady=2,row=2,column=0)
+	self.labelMEPCRC_ref = Label(self.frame2,text="CRC MEPP Réf ", fg=fgColor, font=fontSimple, bg=bgColor)
+        self.labelMEPCRC_ref.grid(padx=2,pady=2,row=2,column=0)
 	
 	self.labelMEPCRC_calc = Label(self.frame2,text="CRC MEP calculé", fg=fgColor, font=fontSimple, bg=bgColor)
         self.labelMEPCRC_calc.grid(padx=2,pady=2,row=2,column=1)
@@ -163,9 +162,9 @@ class TestReception(Frame):
         self.EntryMEPCRC_actu.grid(padx=2,pady=2, row=3 ,column=2)
 	
 	# On crée un voyant qui joue un rôle de signalisation
-	self.canvas = Canvas(self.frame2, width=40,heigh=40, bg=bgColor, bd=0, highlightthickness=0)
-	self.canvas.grid(padx=2,pady=2,row=3,column=3)
-	self.canvas.create_oval(0,0,35,35, fill=self.couleurSignal1)
+	self.canvas2 = Canvas(self.frame2, width=40,heigh=40, bg=bgColor, bd=0, highlightthickness=0)
+	self.canvas2.grid(padx=2,pady=2,row=3,column=3)
+	self.canvas2.create_oval(0,0,35,35, fill=self.couleurSignal1)
 	
 	##
 	self.labelTypeProg = Label(self.frame2,text="Programme en mémoire", fg=fgColor, font=fontSimple, bg=bgColor)
@@ -195,7 +194,7 @@ class TestReception(Frame):
 	self.boutonSave.configure(state=DISABLED)
 	
 	
-	
+    ####################################################
     def valider_choix(self):
 	try:
 	    choix_pn = self.choixPN.get()
@@ -215,18 +214,34 @@ class TestReception(Frame):
 	except Exception as error:
 	    print('Erreur de saisie: ' + repr(error))
     
-    
+    #######################################################
     def loading(self):
 	# on établit la connexion avec la clé
 	self.open_dongle()
 	# on lance le test et on affiche les trames CAN dans la zone logs ainsi que la progressBar
 	interface = 'ics0can0'
 	ask_config = AskConfig()
-	read_config = ReadConfig(interface,self.textLogs,self.progressBar)
+	read_config = ReadConfig(
+	    interface,
+	    self.textLogs,
+	    self.progressBar,
+	    self.EntryPN,
+	    self.EntrySN,
+	    self.EntryDate,
+	    self.EntryBBPCRC_ref,
+	    self.EntryBBPCRC_calc,
+	    self.EntryBBPCRC_actu,
+	    self.canvas,
+	    self.EntryMEPCRC_ref,
+	    self.EntryMEPCRC_calc,
+	    self.EntryMEPCRC_actu,
+	    self.canvas2,
+	    self.EntryTypeProg,
+	    self.textFaults)
 	read_config.start()
 	ask_config.start()
 	self.boutonSave.configure(state=NORMAL)
-	
+    #######################################################
     def disable_fenetre(self,widget,state='disabled'):
 	try:
 	    widget.configure(state=state)
@@ -234,24 +249,29 @@ class TestReception(Frame):
 	    pass
 	for child in widget.winfo_children():
 	    self.disable_fenetre(child,state=state)
-    
+    #####################################################
     def open_dongle(self):
 	# On execute le processus setup
 	try:
-	    self.process1 = Popen(["./icsscand/icsscand","-D"], stdout=PIPE)
-	    time.sleep(1)
-	    self.process2 = Popen(["ifconfig","ics0can0","up"], stdout=PIPE)
+	    self.device = ics.find_devices()
+	    if self.device:
+		self.process1 = Popen(["./icsscand/icsscand","-D"], stdout=PIPE)
+		time.sleep(1)
+		self.process2 = Popen(["ifconfig","ics0can0","up"], stdout=PIPE)
+	    else:
+		showerror("No device Found","Veuillez brancher la clé VCAN !")
 	except:
 	    print ("impossible de se connecter")
+	    showerror("Erreur de communication","Impossible d'ouvrir la clé VCAN. Assurez vous qu'elle est bien branchée et relancer le logiciel")
 	    
-    
+    #######################################################
     def close_dongle(self):
 	# On arrete le processus setup
 	try:
 	    os.system('pkill icsscand')
 	except:
 	    print ("impossible de fermer")
-    
+    ######################################################
     def quit(self):
 	self.close_dongle()
 	self.fenP.destroy()
