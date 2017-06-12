@@ -34,6 +34,9 @@ class TestReception(Frame):
 	self.couleurSignal1 = "grey"
 	self.couleurSignal2 = "grey"
 	self.PN = ""
+	self.CRC_Calib_MEP_Ref = ""
+	self.CRC_Flight_MEP_Ref = ""
+	self.CRC_BBP_Ref = ""
 	# Les différentes zone de l'interface initialisées au démarrage
 	self.init_interface()
 	
@@ -143,7 +146,7 @@ class TestReception(Frame):
 	self.canvas.create_oval(0,0,35,35, fill=self.couleurSignal2)
 	
 	##
-	self.labelMEPCRC_ref = Label(self.frame2,text="CRC MEPP Réf ", fg=fgColor, font=fontSimple, bg=bgColor)
+	self.labelMEPCRC_ref = Label(self.frame2,text="CRC MEP Réf ", fg=fgColor, font=fontSimple, bg=bgColor)
         self.labelMEPCRC_ref.grid(padx=2,pady=2,row=2,column=0)
 	
 	self.labelMEPCRC_calc = Label(self.frame2,text="CRC MEP calculé", fg=fgColor, font=fontSimple, bg=bgColor)
@@ -208,6 +211,10 @@ class TestReception(Frame):
 		    consigne = open(os.path.join(chemin+"/consignes.txt"),"r")
 		    for line in consigne:
 			self.textConsigne.insert(INSERT, line)
+		    # on récupère les données de réference
+		    self.CRC_Calib_MEP_Ref = open(os.path.join(chemin+"/MEP/crc_calib.txt"),"r").readline()[:-1]
+		    self.CRC_Flight_MEP_Ref = open(os.path.join(chemin+"/MEP/crc_flight.txt"),"r").readline()[:-1]
+		    self.CRC_BBP_Ref = open(os.path.join(chemin+"/BBP/crc.txt"),"r").readline()[:-1]
 		except Exception as error:
 		    print(repr(error))
 		    
@@ -223,6 +230,9 @@ class TestReception(Frame):
 	ask_config = AskConfig()
 	read_config = ReadConfig(
 	    interface,
+	    self.CRC_Calib_MEP_Ref,
+	    self.CRC_Flight_MEP_Ref,
+	    self.CRC_BBP_Ref,
 	    self.textLogs,
 	    self.progressBar,
 	    self.EntryPN,
@@ -237,10 +247,13 @@ class TestReception(Frame):
 	    self.EntryMEPCRC_actu,
 	    self.canvas2,
 	    self.EntryTypeProg,
-	    self.textFaults)
+	    self.textFaults,
+	    self.boutonSave,
+	    self.boutonLoad)
 	read_config.start()
 	ask_config.start()
-	self.boutonSave.configure(state=NORMAL)
+	self.boutonSave.configure(state=DISABLED)
+	self.boutonLoad.configure(state=DISABLED)
     #######################################################
     def disable_fenetre(self,widget,state='disabled'):
 	try:

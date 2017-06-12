@@ -8,6 +8,7 @@ import can
 import time                    ## Time-related library
 import threading               ## Threading-based Timer library
 import sys
+import os
 
 bgColor = 'white' # Background color
 fgColor = "#03224C" 
@@ -22,9 +23,33 @@ tailleBorder = 2 # borderwidth
 
 
 class ReadConfig(threading.Thread):
-    def __init__(self,interface,terminal,bar,pn,sn,date,crc_bbp_ref,crc_bbp_calc,crc_bbp_actu,signal1,crc_mep_ref,crc_mep_calc,crc_mep_actu,signal2,prog,faults):
+    def __init__(
+	self,
+	interface,
+	crc_Calib_MEP_Ref,
+	crc_Flight_MEP_Ref,
+	crc_BBP_Ref,
+	terminal,
+	bar,
+	pn,
+	sn,
+	date,
+	crc_bbp_ref,
+	crc_bbp_calc,
+	crc_bbp_actu,
+	signal1,
+	crc_mep_ref,
+	crc_mep_calc,
+	crc_mep_actu,
+	signal2,prog,
+	faults,
+	btSave,
+	btLoad):
         threading.Thread.__init__(self)
         self.interface = interface
+	self.CRC_Calib_MEP_Ref = crc_Calib_MEP_Ref
+	self.CRC_Flight_MEP_Ref = crc_Flight_MEP_Ref
+	self.CRC_BBP_Ref = crc_BBP_Ref
 	self.terminal = terminal
 	self.progressBar = bar
 	self.pn,self.sn,self.date = pn,sn,date
@@ -33,6 +58,8 @@ class ReadConfig(threading.Thread):
 	self.crc_mep_ref,self.crc_mep_calc,self.crc_mep_actu = crc_mep_ref,crc_mep_calc,crc_mep_actu
 	self.prog = prog
 	self.faults = faults
+	self.btSave = btSave
+	self.btLoad = btLoad
 
     def run(self):
         can_interface = self.interface
@@ -67,8 +94,64 @@ class ReadConfig(threading.Thread):
 		    sn = sn.decode("hex")
 		    self.sn.delete(0,END)
 		    self.sn.insert(0,sn)
+	    if i==9:
+		    date_fab = (tab[i][77:83]+"-"+tab[i][83:86]+"-"+tab[i][86:88]).replace(" ","")
+		    self.date.delete(0,END)
+		    self.date.insert(0,date_fab)
+	    if i==1:
+		    crc_mep_actu = (tab[i][77:88]).replace(" ","")
+		    self.crc_mep_actu.delete(0,END)
+		    self.crc_mep_actu.insert(0,crc_mep_actu)
+	    if i==2:
+		    crc_bbp_actu = (tab[i][77:88]).replace(" ","")
+		    self.crc_bbp_actu.delete(0,END)
+		    self.crc_bbp_actu.insert(0,crc_bbp_actu)
+	    if i==123:
+		    crc_bbp_calc = (tab[i-1][77:88]).replace(" ","")
+		    self.crc_bbp_calc.delete(0,END)
+		    self.crc_bbp_calc.insert(0,crc_bbp_actu)
+		    crc_mep_calc = (tab[i][77:88]).replace(" ","")
+		    self.crc_mep_calc.delete(0,END)
+		    self.crc_mep_calc.insert(0,crc_mep_actu)
+	# on affiche les crc de référence
+	programme_running = "inconnu"
+	mep_ref = "XXXXXXXXX"
+	bbp_ref = "XXXXXXXXX"
+	couleur1 = "red"
+	couleur2 = "red"  
+	    
+	if crc_mep_actu == crc_mep_calc:
+	    print "hello"
+	    if crc_mep_actu == self.CRC_Calib_MEP_Ref:
+		mep_ref = self.CRC_Calib_MEP_Ref
+		programme_running = "Calibration"
+		couleur2 = "green"  
+	    elif crc_mep_actu == self.CRC_Flight_MEP_Ref:
+		mep_ref = self.CRC_Flight_MEP_Ref
+		programme_running = "Flight"
+		couleur2 = "green"  
 	
-       
+	self.crc_mep_ref.delete(0,END)
+	self.crc_mep_ref.insert(0,mep_ref)
+	
+	if crc_bbp_actu == crc_bbp_calc:
+	    if crc_bbp_actu == self.CRC_BBP_Ref:
+		bbp_ref = self.CRC_BBP_Ref
+		couleur1 = "green"
+	self.crc_bbp_ref.delete(0,END)
+	self.crc_bbp_ref.insert(0,bbp_ref)
+	
+	# On affiche le type de programme en mémoire
+	self.prog.delete(0,END)
+	self.prog.insert(0,programme_running)
+	# On change la couleur des indicateurs
+	self.signal2.create_oval(0,0,35,35, fill=couleur2)
+	self.signal1.create_oval(0,0,35,35, fill=couleur1)
+	
+	# on réactive les boutons save et load
+	self.btSave.configure(state=NORMAL)
+	self.btLoad.configure(state=NORMAL)
+##################################################################
 
 class AskConfig(threading.Thread):
     def __init__(self):

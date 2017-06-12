@@ -1,0 +1,35 @@
+
+receivetest Version "Release_20150611_n"  (www.peak-system.com)
+------- Copyright (C) 2004-2009 PEAK System-Technik GmbH ------
+receivetest comes with ABSOLUTELY NO WARRANTY.     This is free
+software  and you are welcome  to redistribute it under certain
+conditions.   For   details   see    attached   COPYING   file.
+
+receivetest: device node="/dev/pcanusb32"
+             Extended frames are accepted, init with BTR0BTR1=0x031c
+receivetest: driver version = Release_20170110_n
+2624972984.825 receivetest: m e 0x00400103 8 00 80 03 95 00 00 00 01 
+2624973051.694 receivetest: m s 0x00000001 4 00 00 00 00 
+receivetest: pending CAN status 0x0020 read.
+2624974003.193 receivetest: m e 0x00400103 8 01 80 03 97 00 00 00 01 
+2624975021.476 receivetest: m e 0x00400103 8 00 80 03 95 00 00 00 01 
+2624975490.980 receivetest: m e 0x06103403 8 07 00 00 00 00 00 00 00 
+2624976039.929 receivetest: m e 0x06116903 8 b4 8c 29 21 b7 0e 11 65 
+2624976042.105 receivetest: m e 0x00400103 8 01 80 03 97 00 00 00 01 
+2624977058.41 receivetest: m e 0x00400103 8 00 80 03 95 00 00 00 01 
+2624978076.537 receivetest: m e 0x00400103 8 01 80 03 97 00 00 00 01 
+2624979094.393 receivetest: m e 0x00400103 8 00 80 03 97 00 00 00 01 
+2624980112.676 receivetest: m e 0x00400103 8 01 80 03 95 00 00 00 01 
+receivetest: type            = usb
+             Serial Number   = 0xffffffff
+             Device Number   = 0
+             count of reads  = 11
+             count of writes = 0
+             count of errors = 0
+             count of irqs   = 19
+             last CAN status = 0x0020
+             last error      = 0
+             open paths      = 1
+             driver version  = Release_20170110_n
+receivetest: finished (0): 11 message(s) received
+
