@@ -177,25 +177,27 @@ class TestReception(Frame):
         self.EntryTypeProg.grid(padx=2,pady=2, row=6 ,column=1)
 	
 	##
-	# Bouton sauvegarder
-	self.boutonSave=Button(self.fenetre2,text="Sauvegarder",bd=2, width=50, relief=RAISED, overrelief=RIDGE, bg=buttonColor, command=self.valider_choix)
-        self.boutonSave.pack(pady=5, side=TOP)
-	
 	self.frame3 = Frame(self.fenetre2,bg=bgColor) 
 	self.frame3.pack(pady=5)
+	# Bouton sauvegarder
+	self.boutonSave=Button(self.frame3,text="Sauvegarder NVM",bd=2, width=20, relief=RAISED, overrelief=RIDGE, bg=buttonColor, command=self.sauvegarder_nvm)
+        self.boutonSave.grid(row=0,column=0, padx=2, pady=5)
+	# Bouton Delete NVM
+	self.boutonDelete=Button(self.frame3,text="Effacer NVM",bd=2, width=20, relief=RAISED, overrelief=RIDGE, bg=buttonColor, command=self.delete_nvm)
+        self.boutonDelete.grid(row=0,column=1, padx=2, pady=5)
 	
 	# Zone de Text pour les "erreurs"
 	self.labelFaults = Label(self.frame3,text="Faults", fg=fgColor, font=titreFont, bg=bgColor)
-        self.labelFaults.grid(row=0,column=0)
-	self.textFaults = Text(self.frame3, height=8, width=50,font=("consolas",11))
-	self.textFaults.grid(row=1,column=0)
+        self.labelFaults.grid(row=1,column=0,columnspan=2)
+	self.textFaults = Text(self.frame3, height=8, width=30,font=("consolas",11))
+	self.textFaults.grid(row=2,column=0,columnspan=2)
 	
 	
 	
 	## on désactive les boutons du fenetre2 
 	self.boutonLoad.configure(state=DISABLED)
 	self.boutonSave.configure(state=DISABLED)
-	
+	self.boutonDelete.configure(state=DISABLED)
 	
     ####################################################
     def valider_choix(self):
@@ -224,36 +226,39 @@ class TestReception(Frame):
     #######################################################
     def loading(self):
 	# on établit la connexion avec la clé
-	self.open_dongle()
-	# on lance le test et on affiche les trames CAN dans la zone logs ainsi que la progressBar
-	interface = 'ics0can0'
-	ask_config = AskConfig()
-	read_config = ReadConfig(
-	    interface,
-	    self.CRC_Calib_MEP_Ref,
-	    self.CRC_Flight_MEP_Ref,
-	    self.CRC_BBP_Ref,
-	    self.textLogs,
-	    self.progressBar,
-	    self.EntryPN,
-	    self.EntrySN,
-	    self.EntryDate,
-	    self.EntryBBPCRC_ref,
-	    self.EntryBBPCRC_calc,
-	    self.EntryBBPCRC_actu,
-	    self.canvas,
-	    self.EntryMEPCRC_ref,
-	    self.EntryMEPCRC_calc,
-	    self.EntryMEPCRC_actu,
-	    self.canvas2,
-	    self.EntryTypeProg,
-	    self.textFaults,
-	    self.boutonSave,
-	    self.boutonLoad)
-	read_config.start()
-	ask_config.start()
-	self.boutonSave.configure(state=DISABLED)
-	self.boutonLoad.configure(state=DISABLED)
+	res = self.open_dongle()
+	# Si res = 1, on lance le test et on affiche les trames CAN dans la zone logs ainsi que la progressBar
+	if res:
+	    interface = 'ics0can0'
+	    ask_config = AskConfig()
+	    read_config = ReadConfig(
+		interface,
+		self.CRC_Calib_MEP_Ref,
+		self.CRC_Flight_MEP_Ref,
+		self.CRC_BBP_Ref,
+		self.textLogs,
+		self.progressBar,
+		self.EntryPN,
+		self.EntrySN,
+		self.EntryDate,
+		self.EntryBBPCRC_ref,
+		self.EntryBBPCRC_calc,
+		self.EntryBBPCRC_actu,
+		self.canvas,
+		self.EntryMEPCRC_ref,
+		self.EntryMEPCRC_calc,
+		self.EntryMEPCRC_actu,
+		self.canvas2,
+		self.EntryTypeProg,
+		self.textFaults,
+		self.boutonSave,
+		self.boutonLoad,
+		self.boutonDelete)
+	    read_config.start()
+	    ask_config.start()
+	    self.boutonSave.configure(state=DISABLED)
+	    self.boutonLoad.configure(state=DISABLED)
+	    self.boutonDelete.configure(state=DISABLED)
     #######################################################
     def disable_fenetre(self,widget,state='disabled'):
 	try:
@@ -264,6 +269,7 @@ class TestReception(Frame):
 	    self.disable_fenetre(child,state=state)
     #####################################################
     def open_dongle(self):
+	#self.close_dongle() # au cas ou le processus etait toujours en vie
 	# On execute le processus setup
 	try:
 	    self.device = ics.find_devices()
@@ -271,12 +277,14 @@ class TestReception(Frame):
 		self.process1 = Popen(["./icsscand/icsscand","-D"], stdout=PIPE)
 		time.sleep(1)
 		self.process2 = Popen(["ifconfig","ics0can0","up"], stdout=PIPE)
+		return 1
 	    else:
 		showerror("No device Found","Veuillez brancher la clé VCAN !")
+		return 0
 	except:
 	    print ("impossible de se connecter")
 	    showerror("Erreur de communication","Impossible d'ouvrir la clé VCAN. Assurez vous qu'elle est bien branchée et relancer le logiciel")
-	    
+	return O
     #######################################################
     def close_dongle(self):
 	# On arrete le processus setup
@@ -288,6 +296,12 @@ class TestReception(Frame):
     def quit(self):
 	self.close_dongle()
 	self.fenP.destroy()
+    #####################################################
+    def sauvegarder_nvm(self):
+	pass
+    #####################################################
+    def delete_nvm(self):
+	pass
     
 ##############################################################################
 

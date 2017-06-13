@@ -44,7 +44,8 @@ class ReadConfig(threading.Thread):
 	signal2,prog,
 	faults,
 	btSave,
-	btLoad):
+	btLoad,
+	btDelete):
         threading.Thread.__init__(self)
         self.interface = interface
 	self.CRC_Calib_MEP_Ref = crc_Calib_MEP_Ref
@@ -60,6 +61,7 @@ class ReadConfig(threading.Thread):
 	self.faults = faults
 	self.btSave = btSave
 	self.btLoad = btLoad
+	self.btDelete = btDelete
 
     def run(self):
         can_interface = self.interface
@@ -106,38 +108,43 @@ class ReadConfig(threading.Thread):
 		    crc_bbp_actu = (tab[i][77:88]).replace(" ","")
 		    self.crc_bbp_actu.delete(0,END)
 		    self.crc_bbp_actu.insert(0,crc_bbp_actu)
-	    if i==123:
-		    crc_bbp_calc = (tab[i-1][77:88]).replace(" ","")
+	    if i==122:
+		    crc_bbp_calc = (tab[i][77:88]).replace(" ","")
 		    self.crc_bbp_calc.delete(0,END)
-		    self.crc_bbp_calc.insert(0,crc_bbp_actu)
-		    crc_mep_calc = (tab[i][77:88]).replace(" ","")
+		    self.crc_bbp_calc.insert(0,crc_bbp_calc)
+		    crc_mep_calc = (tab[i-1][77:88]).replace(" ","")
 		    self.crc_mep_calc.delete(0,END)
-		    self.crc_mep_calc.insert(0,crc_mep_actu)
+		    self.crc_mep_calc.insert(0,crc_mep_calc)
 	# on affiche les crc de référence
 	programme_running = "inconnu"
 	mep_ref = "XXXXXXXXX"
 	bbp_ref = "XXXXXXXXX"
 	couleur1 = "red"
-	couleur2 = "red"  
+	couleur2 = "red"
+	notice1 = "Problème avec le CRC BBP !" 
+	notice2 = "Problème avec le CRC MEP" 
 	    
-	if crc_mep_actu == crc_mep_calc:
-	    print "hello"
-	    if crc_mep_actu == self.CRC_Calib_MEP_Ref:
-		mep_ref = self.CRC_Calib_MEP_Ref
-		programme_running = "Calibration"
-		couleur2 = "green"  
-	    elif crc_mep_actu == self.CRC_Flight_MEP_Ref:
-		mep_ref = self.CRC_Flight_MEP_Ref
-		programme_running = "Flight"
-		couleur2 = "green"  
+	if crc_mep_actu == self.CRC_Calib_MEP_Ref:
+	    mep_ref = self.CRC_Calib_MEP_Ref
+	    programme_running = "Calibration"
+	    if crc_mep_calc == crc_mep_actu:
+		couleur2 = "green"
+		notice2 = "Le CRC MEP est correct"
+		
+	    
+	elif crc_mep_actu == self.CRC_Flight_MEP_Ref:
+	    mep_ref = self.CRC_Flight_MEP_Ref
+	    programme_running = "Flight"
+	
+	
 	
 	self.crc_mep_ref.delete(0,END)
 	self.crc_mep_ref.insert(0,mep_ref)
 	
-	if crc_bbp_actu == crc_bbp_calc:
-	    if crc_bbp_actu == self.CRC_BBP_Ref:
-		bbp_ref = self.CRC_BBP_Ref
-		couleur1 = "green"
+	if crc_bbp_actu == self.CRC_BBP_Ref and crc_bbp_actu == crc_bbp_calc:
+	    bbp_ref = self.CRC_BBP_Ref
+	    couleur1 = "green"
+	    notice1 = "Le CRC BBP est correct"
 	self.crc_bbp_ref.delete(0,END)
 	self.crc_bbp_ref.insert(0,bbp_ref)
 	
@@ -148,9 +155,36 @@ class ReadConfig(threading.Thread):
 	self.signal2.create_oval(0,0,35,35, fill=couleur2)
 	self.signal1.create_oval(0,0,35,35, fill=couleur1)
 	
-	# on réactive les boutons save et load
+	
+	
+	# On affiche les fautes
+	self.faults.delete(0.0,END)
+	f="2"
+	ligne1 = "Smoke Alarm : "+tab[237][80:82]+"\t\t T° Alarm: "+tab[245][80:82]+"\n"
+	ligne2 = "Program Mem: "+tab[125][80:82]+"\t\t Config Mem: "+tab[133][80:82]+"\n"
+	ligne3 = "Watch Dog: "+tab[141][80:82]+"\t\t CAN Bus: "+tab[149][80:82]+"\n"
+	ligne4 = "IR LED: "+tab[157][80:82]+"\t\t Blue LED: "+tab[165][80:82]+"\n"
+	ligne5 = "Photo Diode: "+tab[174][80:82]+"\t\t Gain Amp: "+tab[181][80:82]+"\n"
+	ligne6 = "ADC: "+tab[189][80:82]+"\t\t Temp Dif: "+tab[197][80:82]+"\n"
+	ligne7 = "Air Temp: "+tab[205][80:82]+"\t\t Lab Temp: "+tab[213][80:82]+"\n"
+	ligne8 = "Address: "+tab[221][80:82]+"\t\t Reserved: "+tab[229][80:82]+"\n"
+	
+	self.faults.insert(INSERT,ligne1)
+	self.faults.insert(INSERT,ligne2)
+	self.faults.insert(INSERT,ligne3)
+	self.faults.insert(INSERT,ligne4)
+	self.faults.insert(INSERT,ligne5)
+	self.faults.insert(INSERT,ligne6)
+	self.faults.insert(INSERT,ligne7)
+	self.faults.insert(INSERT,ligne8)
+	
+	# on affiche une message d'information
+	showinfo("Test Terminé!",notice1+"\n"+notice2)
+	
+	# on réactive les boutons du fenetre 2
 	self.btSave.configure(state=NORMAL)
 	self.btLoad.configure(state=NORMAL)
+	self.btDelete.configure(state=NORMAL)
 ##################################################################
 
 class AskConfig(threading.Thread):
