@@ -10,6 +10,7 @@ from subprocess import Popen, PIPE
 import os
 import time                    ## Time-related library
 import datetime
+import data
 
 
 bgColor = 'light yellow' # Background color
@@ -186,7 +187,7 @@ class TestReception(Frame):
 	self.boutonSave=Button(self.frame3,text="Sauvegarder NVM",bd=2, width=20, relief=RAISED, overrelief=RIDGE, bg=buttonColor, command=self.sauvegarder_nvm)
         self.boutonSave.grid(row=0,column=0, padx=2, pady=5)
 	# Bouton Delete NVM
-	self.boutonDelete=Button(self.frame3,text="Effacer NVM",bd=2, width=20, relief=RAISED, overrelief=RIDGE, bg=buttonColor, command=self.delete_nvm)
+	self.boutonDelete=Button(self.frame3,text="Nettoyer NVM",bd=2, width=20, relief=RAISED, overrelief=RIDGE, bg=buttonColor, command=self.delete_nvm)
         self.boutonDelete.grid(row=0,column=1, padx=2, pady=5)
 	
 	# Zone de Text pour les "erreurs"
@@ -262,7 +263,28 @@ class TestReception(Frame):
 	    self.boutonSave.configure(state=DISABLED)
 	    self.boutonLoad.configure(state=DISABLED)
 	    self.boutonDelete.configure(state=DISABLED)
+    #####################################################
+    def delete_nvm(self):
+	"""# on affiche le message d'attente dans les logs
+	self.textLogs.delete('0.0',END)
+	self.textLogs.insert('0.0', "Clearing ...")
+	messages = []
+	bus = can.interface.Bus()
+        for d in data.clear_nvm:
+            messages.append(can.Message(arbitration_id=0x7bf,data=d,extended_id=False))
+        
+        for msg in messages:
+            try:
+                bus.send(msg)
+            except can.CanError:
+                print("Message NOT sent")
+            time.sleep(0.3)
+	"""
+	log = Logs(self.textLogs,self.progressBar,self.boutonDelete)
+	log.start()
+	self.boutonDelete.configure(state=DISABLED)
     #######################################################
+    
     def disable_fenetre(self,widget,state='disabled'):
 	try:
 	    widget.configure(state=state)
@@ -320,9 +342,7 @@ class TestReception(Frame):
 		text += line[65:88]+"\n"
 	f.write(text)
 	f.close()
-    #####################################################
-    def delete_nvm(self):
-	pass
+    
     
 ##############################################################################
 

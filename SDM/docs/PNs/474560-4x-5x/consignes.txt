@@ -18,4 +18,6 @@ KIDDE AEROSPACE & DEFENSE COMPONENT MAINTENANCE MANUAL PART NUMBER 474560-4x-5x
 
 8) Sauvegrder le contenu du NVM en cliquant sur le bouton "Sauvegarder "
 
-9) Le fichier est sauvegardé dans le dossier ..... sous le nom ......
+9) Le fichier est sauvegardé par défaut dans le dossier docs/archive sous le nom SN_timestamp.txt
+    - avec SN le numéro de série de l'équipement
+    - timestamp : identificateur généré à partir de la date de sauvegarde du fichier
