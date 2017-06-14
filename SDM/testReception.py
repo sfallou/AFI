@@ -3,13 +3,16 @@
 from Tkinter import *
 from tkMessageBox import *
 import ttk
+import tkFileDialog
 import ics
 from read_nvm import *
 from subprocess import Popen, PIPE
 import os
 import time                    ## Time-related library
+import datetime
 
-bgColor = 'white' # Background color
+
+bgColor = 'light yellow' # Background color
 fgColor = "#03224C" 
 WinWidth = 400 # largeur fenetre
 WinHigh = 200 # hauteur fenetre
@@ -109,13 +112,13 @@ class TestReception(Frame):
 	self.labelDate = Label(self.frame1,text="Date Fabrication", fg=fgColor, font=fontSimple, bg=bgColor)
         self.labelDate.grid(padx=2,pady=2,row=2,column=0)
 	
-	self.EntryPN=Entry(self.frame1, font=fontSimple, bg=bgColor, width=entryLength)
+	self.EntryPN=Entry(self.frame1, font=fontSimple, width=entryLength)
         self.EntryPN.grid(padx=2,pady=2, row=0 ,column=1)
 	
-	self.EntrySN=Entry(self.frame1, font=fontSimple, bg=bgColor, width=entryLength)
+	self.EntrySN=Entry(self.frame1, font=fontSimple, width=entryLength)
         self.EntrySN.grid(padx=2,pady=2, row=1 ,column=1)
 	
-	self.EntryDate=Entry(self.frame1, font=fontSimple, bg=bgColor, width=entryLength)
+	self.EntryDate=Entry(self.frame1, font=fontSimple, width=entryLength)
         self.EntryDate.grid(padx=2,pady=2, row=2 ,column=1)
 	
 	###
@@ -131,13 +134,13 @@ class TestReception(Frame):
 	self.labelBBPCRC_actu = Label(self.frame2,text="CRC BBP actuel", fg=fgColor, font=fontSimple, bg=bgColor)
         self.labelBBPCRC_actu.grid(padx=2,pady=2,row=0,column=2)
 	
-	self.EntryBBPCRC_ref=Entry(self.frame2, font=fontSimple, bg=bgColor, width=entryLength)
+	self.EntryBBPCRC_ref=Entry(self.frame2, font=fontSimple, width=entryLength)
         self.EntryBBPCRC_ref.grid(padx=2,pady=2, row=1, column=0)
 	
-	self.EntryBBPCRC_calc=Entry(self.frame2, font=fontSimple, bg=bgColor, width=entryLength)
+	self.EntryBBPCRC_calc=Entry(self.frame2, font=fontSimple, width=entryLength)
         self.EntryBBPCRC_calc.grid(padx=2,pady=2, row=1, column=1)
 	
-	self.EntryBBPCRC_actu=Entry(self.frame2, font=fontSimple, bg=bgColor, width=entryLength)
+	self.EntryBBPCRC_actu=Entry(self.frame2, font=fontSimple, width=entryLength)
         self.EntryBBPCRC_actu.grid(padx=2,pady=2, row=1 ,column=2)
 	
 	# On crée un voyant qui joue un rôle de signalisation
@@ -155,13 +158,13 @@ class TestReception(Frame):
 	self.labelMEPCRC_actu = Label(self.frame2,text="CRC MEP actuel", fg=fgColor, font=fontSimple, bg=bgColor)
         self.labelMEPCRC_actu.grid(padx=2,pady=2,row=2,column=2)
 	
-	self.EntryMEPCRC_ref=Entry(self.frame2, font=fontSimple, bg=bgColor, width=entryLength)
+	self.EntryMEPCRC_ref=Entry(self.frame2, font=fontSimple, width=entryLength)
         self.EntryMEPCRC_ref.grid(padx=2,pady=2, row=3, column=0)
 	
-	self.EntryMEPCRC_calc=Entry(self.frame2, font=fontSimple, bg=bgColor, width=entryLength)
+	self.EntryMEPCRC_calc=Entry(self.frame2, font=fontSimple, width=entryLength)
         self.EntryMEPCRC_calc.grid(padx=2,pady=2, row=3, column=1)
 	
-	self.EntryMEPCRC_actu=Entry(self.frame2, font=fontSimple, bg=bgColor, width=entryLength)
+	self.EntryMEPCRC_actu=Entry(self.frame2, font=fontSimple, width=entryLength)
         self.EntryMEPCRC_actu.grid(padx=2,pady=2, row=3 ,column=2)
 	
 	# On crée un voyant qui joue un rôle de signalisation
@@ -173,7 +176,7 @@ class TestReception(Frame):
 	self.labelTypeProg = Label(self.frame2,text="Programme en mémoire", fg=fgColor, font=fontSimple, bg=bgColor)
         self.labelTypeProg.grid(padx=2,pady=5,row=5,column=1)
 	
-	self.EntryTypeProg=Entry(self.frame2, font=fontSimple, bg=bgColor, width=entryLength)
+	self.EntryTypeProg=Entry(self.frame2, font=fontSimple, width=entryLength)
         self.EntryTypeProg.grid(padx=2,pady=2, row=6 ,column=1)
 	
 	##
@@ -298,7 +301,25 @@ class TestReception(Frame):
 	self.fenP.destroy()
     #####################################################
     def sauvegarder_nvm(self):
-	pass
+	sn = str(self.EntrySN.get())
+	pn = str(self.EntryPN.get())
+	date = str(self.EntryDate.get())
+	crc_mep = str(self.EntryMEPCRC_actu.get())
+	today = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+	lru = ""
+	entete_text = today+" (GMT)\nSerial Number: "+sn+"\nPart Number: "+pn+"\nMEP CRC: "+crc_mep+"\nLRU Run Time: "+lru
+	entete_text = entete_text+"\nManufacturing Date: "+date+"\n"
+	chemin = "./docs/archive/"
+	nom = sn+"_"+str(int(time.time()))
+	f = tkFileDialog.asksaveasfile(mode="w", defaultextension=".txt", initialfile=nom, initialdir=chemin)
+	if f is None:
+	    return
+	text = entete_text
+	with open("resultat_nvm.txt") as fich:
+	    for line in fich:
+		text += line[65:88]+"\n"
+	f.write(text)
+	f.close()
     #####################################################
     def delete_nvm(self):
 	pass
