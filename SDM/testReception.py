@@ -299,9 +299,9 @@ class TestReception(Frame):
 	try:
 	    self.device = ics.find_devices()
 	    if self.device:
-		self.process1 = Popen(["./icsscand/icsscand","-D"], stdout=PIPE)
+		self.process1 = Popen(["sudo","./icsscand/icsscand","-D"], stdout=PIPE)
 		time.sleep(1)
-		self.process2 = Popen(["ifconfig","ics0can0","up"], stdout=PIPE)
+		self.process2 = Popen(["sudo","ifconfig","ics0can0","up"], stdout=PIPE)
 		return 1
 	    else:
 		showerror("No device Found","Veuillez brancher la clé VCAN !")
@@ -314,7 +314,7 @@ class TestReception(Frame):
     def close_dongle(self):
 	# On arrete le processus setup
 	try:
-	    os.system('pkill icsscand')
+	    os.system('sudo pkill icsscand')
 	except:
 	    print ("impossible de fermer")
     ######################################################
