@@ -237,6 +237,9 @@ class Logs(threading.Thread):
                 print("Message NOT sent")
             time.sleep(0.3)
 	    self.progressBar["value"] = i
+	# on affiche une message d'information
+	showinfo("Nettoyage Terminé!","Le NVM a été correctement nettoyé")
+	
 	self.btCLR.configure(state=NORMAL)
 	    
     
