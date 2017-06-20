@@ -3,8 +3,9 @@
 from Tkinter import *
 from tkMessageBox import *
 import testReception as tR
+import configuration as conf
 
-bgColor = 'white' # Background color
+bgColor = 'light yellow' # Background color
 fgColor = "#03224C" 
 WinWidth = 400 # largeur fenetre
 WinHigh = 200 # hauteur fenetre
@@ -14,31 +15,41 @@ entryLength = 10 # Taille des Entry
 buttonLength = 10 # Taille des boutons
 buttonColor = '#C0C0C0' # Couleur des boutons
 tailleBorder = 2 # borderwidth
-
+    
 # la classe SDM (Smoke Detector Maintenance)
 class SDM(Tk):
     def __init__(self):
         Tk.__init__(self)
         self.title('Smoke Detector Maintenance')
-        self.geometry("1170x630")
         self.resizable(0, 0)
         self.configure(bg=bgColor)
+	self.geometry("1170x630")
+	"""x = (self.winfo_screenwidth() - self.winfo_reqwidth())/50
+	y = (self.winfo_screenheight() - self.winfo_reqheight())/50
+	self.geometry("+%d+%d"%(x,y))
+	"""
+	####
 	self.menu()
-	self.test_reception()
+	###@
+	self.testReceptionPage = tR.TestReception(fenetre_principale=self)
+	self.testReceptionPage.pack()
+	self.configurationPage = conf.Configuration(fenetre_principale=self)
 	
     def menu(self):
         # creation du menu principale
         menubar = Menu(self,bg=bgColor)
         self.config(menu=menubar)
-        menuTestReception = Menu(menubar,tearoff=0, bg='#03224C', postcommand=self.quit)
+        menuTestReception = Menu(menubar,tearoff=0, bg='#03224C', postcommand=self.test_reception)
         menubar.add_cascade(label="Test de Reception", menu=menuTestReception)
-        menuCalibration = Menu(menubar,tearoff=0, bg='#03224C', postcommand=self.quit)
+	menuConfiguration = Menu(menubar,tearoff=0, bg='#03224C', postcommand=self.configuration)
+        menubar.add_cascade(label= "Configuration", menu=menuConfiguration)
+        menuCalibration = Menu(menubar,tearoff=0, bg='#03224C', postcommand=self.rien)
         menubar.add_cascade(label= "Calibration", menu=menuCalibration)
-        menuPAB = Menu(menubar,tearoff=0, bg='#03224C', postcommand=self.quit)
+        menuPAB = Menu(menubar,tearoff=0, bg='#03224C', postcommand=self.rien)
         menubar.add_cascade(label= "PAB", menu=menuPAB)
-        menuHelp = Menu(menubar,tearoff=0, bg='#03224C', postcommand=self.quit)
+        menuHelp = Menu(menubar,tearoff=0, bg='#03224C', postcommand=self.rien)
         menubar.add_cascade(label= "Help", menu=menuHelp)
-        menuAbout = Menu(menubar,tearoff=0, bg='#03224C', postcommand=self.quit)
+        menuAbout = Menu(menubar,tearoff=0, bg='#03224C', postcommand=self.rien)
         menubar.add_cascade(label= "About", menu=menuAbout) 
         
         ################################
@@ -50,8 +61,21 @@ class SDM(Tk):
         #self.textEntete.grid(row =0, column =0, columnspan =3, padx =1, pady =1)
         self.textEntete.pack(side=TOP)
 	
+    def cacher(self):
+	self.testReceptionPage.pack_forget()
+	self.configurationPage.pack_forget()
+    
     def test_reception(self):
-	tR.TestReception(fenetre_principale=self)
+	self.cacher()
+	self.testReceptionPage.pack()
+	
+    def configuration(self):
+	self.cacher()
+	self.configurationPage.pack()
+    
+    def rien(self):
+	pass
+	
 
 ##############################################################################
 

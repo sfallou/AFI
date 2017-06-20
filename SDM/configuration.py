@@ -33,7 +33,7 @@ class Configuration(Frame):
 	self.fenP.protocol("WM_DELETE_WINDOW", self.quit)
 	# center window
 	#self.fenP.eval('tk::PlaceWindow %s center' % self.fenP.winfo_pathname(self.fenP.winfo_id()))
-        self.pack()
+        #self.pack()
 	self.configure(bg=bgColor)
 	self.PN = ""
 	self.CRC_MEP = ""
@@ -62,14 +62,14 @@ class Configuration(Frame):
 	self.choixPN = StringVar(self.fenetre1)
         self.choixPN.set("Choisir le type de PN")
         self.EntryChoixPN=OptionMenu(self.frame00, self.choixPN,*choix_pn)
-	self.EntryChoixPN.config(width=20)
+	self.EntryChoixPN.config(width=18)
         self.EntryChoixPN.grid(padx=2,row=0,column=1)
 	
 	choix_prog = ["Calibration","Flight"]
 	self.choixPROG = StringVar(self.fenetre1)
-        self.choixPROG.set("Calibration")
+        self.choixPROG.set("Type de programme")
 	self.EntryChoixPROG=OptionMenu(self.frame00, self.choixPROG,*choix_prog)
-	self.EntryChoixPROG.config(width=20)
+	self.EntryChoixPROG.config(width=15)
         self.EntryChoixPROG.grid(padx=2,row=0,column=2)
 	
 	self.boutonValider=Button(self.frame00,text="Valider",bd=2, relief=RAISED, overrelief=RIDGE, bg=buttonColor, command=self.valider_choix)
@@ -218,9 +218,9 @@ class Configuration(Frame):
     def valider_choix(self):
 	try:
 	    choix_pn = self.choixPN.get()
-	    if choix_pn  != "Choisir le type de PN":
+	    choix_prog = self.choixPROG.get()
+	    if choix_pn  != "Choisir le type de PN" and choix_prog  != "Type de programme" :
 		self.PN = choix_pn
-		choix_prog = self.choixPROG.get()
 		# on établit la connexion avec la clé
 		res = self.open_dongle()
 		# Si res = 1, on lance le test et on affiche les trames CAN dans la zone logs ainsi que la progressBar

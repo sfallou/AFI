@@ -33,7 +33,7 @@ class TestReception(Frame):
 	self.fenP.protocol("WM_DELETE_WINDOW", self.quit)
 	# center window
 	#self.fenP.eval('tk::PlaceWindow %s center' % self.fenP.winfo_pathname(self.fenP.winfo_id()))
-        self.pack()
+        #self.pack()
 	self.configure(bg=bgColor)
 	self.couleurSignal1 = "grey"
 	self.couleurSignal2 = "grey"
@@ -351,6 +351,6 @@ if __name__ == '__main__':
     root.title("Test de Reception")
     root.configure(bg=bgColor)
     testDeReception = TestReception(fenetre_principale=root)
-    testDeReception.mainloop()
+    #testDeReception.mainloop()
     
     
