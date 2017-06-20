@@ -9,7 +9,7 @@ import threading               ## Threading-based Timer library
 import sys
 
 
-class ReadAdressMemory(threading.Thread):
+class TerminalLog(threading.Thread):
     def __init__(self,interface,terminal):
         threading.Thread.__init__(self)
         self.interface = interface
@@ -26,6 +26,10 @@ class ReadAdressMemory(threading.Thread):
             else :
                 print(message)
                 info = str(message)+"\n" 
+		if info[40:44] == "07ff":
+		    self.terminal.insert(INSERT, "Trame reçue:\n")
+		if info[40:44] == "07bf":
+		    self.terminal.insert(INSERT, "Trame émise:\n")
 		self.terminal.insert(INSERT, info)
                 #file.write(info)
         #file.close() 
@@ -73,51 +77,29 @@ class AskAdressMemory(threading.Thread):
 			bus.send(msg)
 		except can.CanError:
 			print("Message NOT sent")
-		#time.sleep(0.3)
+		
 
 ###################################################
-"""class writeAdressMemory(threading.Thread):
-    def __init__(self,adr,mem):
+class WriteAdressMemory(threading.Thread):
+    def __init__(self,adr,donnee):
         threading.Thread.__init__(self)
         self.adresse = adr
-        self.memoire = mem
-        self.commande = ''
-    
+        self.donnee = str(donnee)
+        
     def run(self):
-		if self.taille == '4' and self.type_memoire == "NVM":
-			self.commande = 0x31
-		if self.taille == '4' and self.type_memoire == "RAM":
-			self.commande = 0x30
-		if self.taille == '4' and self.type_memoire == "FLASH":
-			self.commande = 0x32
-		if self.taille == '3' and self.type_memoire == "NVM":
-			self.commande = 0x21
-		if self.taille == '3' and self.type_memoire == "RAM":
-			self.commande = 0x20
-		if self.taille == '3' and self.type_memoire == "FLASH":
-			self.commande = 0x22
-		if self.taille == '2' and self.type_memoire == "NVM":
-			self.commande = 0x11
-		if self.taille == '2' and self.type_memoire == "RAM":
-			self.commande = 0x10
-		if self.taille == '2' and self.type_memoire == "FLASH":
-			self.commande = 0x12
-		if self.taille == '1' and self.type_memoire == "NVM":
-			self.commande = 0x01
-		if self.taille == '1' and self.type_memoire == "RAM":
-			self.commande = 0x00
-		if self.taille == '1' and self.type_memoire == "FLASH":
-			self.commande = 0x02
-		
-		d = [self.commande, 0x00, 0x00, self.adresse, 0x00, 0x00, 0x00, 0x00]
-		#print (d)
-		bus = can.interface.Bus()
-		msg = can.Message(arbitration_id=0x7bf,data=d,extended_id=False)
-		try:
-			bus.send(msg)
-		except can.CanError:
-			print("Message NOT sent")
-"""
+	if len(self.donnee) < 8:
+	    while len(self.donnee) <8:
+		self.donnee += '0'
+	data = [self.adresse]+[int(self.donnee[i:i+2],16) for i in range(0,len(self.donnee),2)]
+	d = [0xb1]+[0x00]+[0x00]+data
+	#print (d)
+	bus = can.interface.Bus()
+	msg = can.Message(arbitration_id=0x7bf,data=d,extended_id=False)
+	try:
+	    bus.send(msg)
+	except can.CanError:
+	    print("Message NOT sent")
+	    
 ##############################################################################
 
 if __name__ == '__main__':

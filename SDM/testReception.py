@@ -193,7 +193,7 @@ class TestReception(Frame):
 	# Zone de Text pour les "erreurs"
 	self.labelFaults = Label(self.frame3,text="Faults", fg=fgColor, font=titreFont, bg=bgColor)
         self.labelFaults.grid(row=1,column=0,columnspan=2)
-	self.textFaults = Text(self.frame3, height=8, width=30,font=("consolas",11))
+	self.textFaults = Text(self.frame3, height=8, width=40,font=("consolas",11))
 	self.textFaults.grid(row=2,column=0,columnspan=2)
 	
 	
@@ -328,7 +328,7 @@ class TestReception(Frame):
 	date = str(self.EntryDate.get())
 	crc_mep = str(self.EntryMEPCRC_actu.get())
 	today = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-	lru = ""
+	lru = open("resultat_nvm.txt","r").readlines()[97][77:88]
 	entete_text = today+" (GMT)\nSerial Number: "+sn+"\nPart Number: "+pn+"\nMEP CRC: "+crc_mep+"\nLRU Run Time: "+lru
 	entete_text = entete_text+"\nManufacturing Date: "+date+"\n"
 	chemin = "./docs/archive/"

@@ -131,6 +131,13 @@ class ReadConfig(threading.Thread):
 	    if crc_mep_calc == crc_mep_actu:
 		couleur2 = "green"
 		notice2 = "Le CRC MEP est correct"
+	
+	if crc_mep_actu == self.CRC_Flight_MEP_Ref:
+	    mep_ref = self.CRC_Flight_MEP_Ref
+	    programme_running = "Flight"
+	    if crc_mep_calc == crc_mep_actu:
+		couleur2 = "green"
+		notice2 = "Le CRC MEP est correct"
 		
 	    
 	elif crc_mep_actu == self.CRC_Flight_MEP_Ref:
@@ -161,14 +168,14 @@ class ReadConfig(threading.Thread):
 	# On affiche les fautes
 	self.faults.delete(0.0,END)
 	f="2"
-	ligne1 = "Smoke Alarm : "+tab[237][80:82]+"\t\t T° Alarm: "+tab[245][80:82]+"\n"
-	ligne2 = "Program Mem: "+tab[125][80:82]+"\t\t Config Mem: "+tab[133][80:82]+"\n"
-	ligne3 = "Watch Dog: "+tab[141][80:82]+"\t\t CAN Bus: "+tab[149][80:82]+"\n"
-	ligne4 = "IR LED: "+tab[157][80:82]+"\t\t Blue LED: "+tab[165][80:82]+"\n"
-	ligne5 = "Photo Diode: "+tab[174][80:82]+"\t\t Gain Amp: "+tab[181][80:82]+"\n"
-	ligne6 = "ADC: "+tab[189][80:82]+"\t\t Temp Dif: "+tab[197][80:82]+"\n"
-	ligne7 = "Air Temp: "+tab[205][80:82]+"\t\t Lab Temp: "+tab[213][80:82]+"\n"
-	ligne8 = "Address: "+tab[221][80:82]+"\t\t Reserved: "+tab[229][80:82]+"\n"
+	ligne1 = "Smoke Alarm:  "+tab[237][80:82]+"\t\t T° Alarm   :     "+tab[245][80:82]+"\n"
+	ligne2 = "Program Mem: "+tab[125][80:82]+"\t\t Config Mem:    "+tab[133][80:82]+"\n"
+	ligne3 = "Watch Dog  :    "+tab[141][80:82]+"\t\t CAN Bus    :     "+tab[149][80:82]+"\n"
+	ligne4 = "IR LED     :        "+tab[157][80:82]+"\t\t Blue LED   :      "+tab[165][80:82]+"\n"
+	ligne5 = "Photo Diode:     "+tab[174][80:82]+"\t\t Gain Amp   :    "+tab[181][80:82]+"\n"
+	ligne6 = "ADC        :        "+tab[189][80:82]+"\t\t Temp Dif   :     "+tab[197][80:82]+"\n"
+	ligne7 = "Air Temp   :      "+tab[205][80:82]+"\t\t Lab Temp   :    "+tab[213][80:82]+"\n"
+	ligne8 = "Address    :      "+tab[221][80:82]+"\t\t Reserved   :     "+tab[229][80:82]+"\n"
 	
 	self.faults.insert(INSERT,ligne1)
 	self.faults.insert(INSERT,ligne2)

@@ -41,6 +41,7 @@ class Configuration(Frame):
 	# Les différentes zone de l'interface initialisées au démarrage
 	self.init_interface()
 	
+	
     def init_interface(self):
 	#création des  fenêtres
 	self.fenetre1 = Frame(self,bg=bgColor,borderwidth=tailleBorder,relief=GROOVE)
@@ -97,24 +98,37 @@ class Configuration(Frame):
         self.boutonConfigurer.grid(padx=2,pady=15,row=5,column=0,columnspan=4)
 	
 	# Zone updates
-	self.labelZoneWR = LabelFrame(self.frame0,text="Updates", fg=fgColor, font=titreFont, bg=bgColor)
-	self.labelZoneWR.grid(padx=2,pady=5,row=6,column=0,columnspan=4)
+
+        self.label_fWrite=LabelFrame(self.frame0,text="Updates", fg=fgColor, font=titreFont, bg=bgColor)
+	self.label_fWrite.grid(padx=2,pady=5,row=6,column=0,columnspan=4)
 	
-	self.EntryUpdatePN=Entry(self.labelZoneWR, font=fontSimple, width=entryLength)
-        self.EntryUpdatePN.grid(padx=2,pady=2, row=0 ,column=0)
-	self.boutonUpdatePN=Button(self.labelZoneWR,text="Update PN",bd=2, width=buttonLength, relief=RAISED, overrelief=RIDGE, bg=buttonColor)
-        self.boutonUpdatePN.grid(padx=2,pady=2,row=1,column=0)
+	self.labelUpdatePN=Label(self.label_fWrite,text="Format BCD(8)", fg=fgColor, font=fontSimple, bg=bgColor)
+        self.labelUpdatePN.grid(padx=2, pady=2, row=0 ,column=0)
 	
-	self.EntryUpdateSN=Entry(self.labelZoneWR, font=fontSimple, width=entryLength)
-        self.EntryUpdateSN.grid(padx=2,pady=2, row=0 ,column=1)
-	self.boutonUpdateSN=Button(self.labelZoneWR,text="Update SN",bd=2, width=buttonLength, relief=RAISED, overrelief=RIDGE, bg=buttonColor)
-        self.boutonUpdateSN.grid(padx=2,pady=2,row=1,column=1)
+	self.labelUpdateSN=Label(self.label_fWrite,text="Format ASCII(7)", fg=fgColor, font=fontSimple, bg=bgColor)
+        self.labelUpdateSN.grid(padx=2, pady=2, row=0 ,column=1)
 	
-	self.EntryUpdateDate=Entry(self.labelZoneWR, font=fontSimple, width=entryLength)
-        self.EntryUpdateDate.grid(padx=2,pady=2, row=0 ,column=2)
-	self.boutonUpdateDate=Button(self.labelZoneWR,text="Update Date ",bd=2, width=buttonLength, relief=RAISED, overrelief=RIDGE, bg=buttonColor)
-        self.boutonUpdateDate.grid(padx=2,pady=2,row=1,column=2)
+	self.labelUpdateDate=Label(self.label_fWrite,text="YYYYMMDD", fg=fgColor, font=fontSimple, bg=bgColor)
+        self.labelUpdateDate.grid(padx=2, pady=2, row=0 ,column=2)
 	
+        self.EntryUpdatePN=Entry(self.label_fWrite, font=fontSimple, width=entryLength)
+        self.EntryUpdatePN.grid(padx=2, pady=2, row=1 ,column=0)
+
+        self.EntryUpdateSN=Entry(self.label_fWrite, font=fontSimple, width=entryLength)
+        self.EntryUpdateSN.grid(padx=2, pady=2, row=1 ,column=1)
+
+        self.EntryUpdateDate=Entry(self.label_fWrite, font=fontSimple, width=entryLength)
+        self.EntryUpdateDate.grid(padx=2, pady=2, row=1 ,column=2)
+
+        self.boutonUpdatePN=Button(self.label_fWrite,text='Modifier PN',bd=2, relief=RAISED, overrelief=RIDGE, bg=buttonColor)
+        self.boutonUpdatePN.grid(padx=2, pady=2, row=2 ,column=0)
+
+        self.boutonUpdateSN=Button(self.label_fWrite,text='Modifier SN',bd=2, relief=RAISED, overrelief=RIDGE, bg=buttonColor)
+        self.boutonUpdateSN.grid(padx=2, pady=2, row=2 ,column=1)
+        
+        self.boutonUpdateDate=Button(self.label_fWrite,text='Modifier Date ',bd=2, relief=RAISED, overrelief=RIDGE, bg=buttonColor)
+        self.boutonUpdateDate.grid(padx=2, pady=2, row=2 ,column=2)
+
 	# Zone read Case mémoire
 	self.labelReadMemoire=LabelFrame(self.frame0,text="Read", fg=fgColor, font=titreFont, bg=bgColor)
         self.labelReadMemoire.grid(padx=2,pady=5,row=7,column=0,columnspan=4)
@@ -143,47 +157,55 @@ class Configuration(Frame):
         self.EntryReadNbOctets=OptionMenu(self.labelReadMemoire, self.nbOctet,"1","2","3","4")
         self.EntryReadNbOctets.grid(padx=2, row=1 ,column=3)
 
-        self.boutonReadCaseMemoire=Button(self.labelReadMemoire,text="Read",bd=2, relief=RAISED, overrelief=RIDGE, bg=buttonColor)
+        self.boutonReadCaseMemoire=Button(self.labelReadMemoire,text="Read",bd=2, relief=RAISED,width=9, overrelief=RIDGE, bg=buttonColor)
         self.boutonReadCaseMemoire.grid(padx=2, pady=2, row=1 ,column=4)
 
 	# Zone Write memory
-	self.labelWriteMemoire=LabelFrame(self.frame0,text="Write", fg=fgColor, font=titreFont, bg=bgColor)
-        self.labelWriteMemoire.grid(padx=2,pady=5,row=8,column=0,columnspan=4)
+	
+	self.label_fWriteMemoire=LabelFrame(self.frame0,text="Write", fg=fgColor, font=titreFont, bg=bgColor)
+        self.label_fWriteMemoire.grid(padx=2,pady=5,row=8,column=0,columnspan=4)
         
-	Label(self.labelWriteMemoire,text="0x", fg=fgColor, font=fontSimple, bg=bgColor).grid(padx=0, pady=2, row=1 ,column=0)
-        self.labelWriteCaseMemoire=Label(self.labelWriteMemoire,text="@ Mémoire", fg=fgColor, font=fontSimple, bg=bgColor)
+
+        self.labelWriteCaseMemoire=Label(self.label_fWriteMemoire,text="@ Mémoire", fg=fgColor, font=fontSimple, bg=bgColor)
         self.labelWriteCaseMemoire.grid(padx=2, pady=2, row=0 ,column=1)
 
-        self.labelWriteDatas=Label(self.labelWriteMemoire,text="Octet ", fg=fgColor, font=fontSimple, bg=bgColor)
+        self.labelWriteDatas=Label(self.label_fWriteMemoire,text="Données ", fg=fgColor, font=fontSimple, bg=bgColor)
         self.labelWriteDatas.grid(padx=2, pady=2, row=0 ,column=2)
 	
-        self.EntryWriteCaseMemoire=Entry(self.labelWriteMemoire, font=fontSimple, width=entryLength)
-        self.EntryWriteCaseMemoire.grid(padx=2, row=1,column=1)
+	Label(self.label_fWriteMemoire,text="0x", fg=fgColor, font=fontSimple, bg=bgColor).grid(padx=0, pady=2, row=1 ,column=0)
+        self.EntryWriteCaseMemoire=Entry(self.label_fWriteMemoire, font=fontSimple, width=entryLength)
+        self.EntryWriteCaseMemoire.grid(ipadx=0, row=1,column=1,sticky=W)
 
-        self.nbOctetWrite = StringVar(self.labelWriteMemoire)
-        self.nbOctetWrite.set("4")
-        self.EntryWriteNbOctets=OptionMenu(self.labelWriteMemoire, self.nbOctetWrite,"1","2","3","4")
-        self.EntryWriteNbOctets.grid(padx=2, row=1 ,column=2)
-	
+        self.EntryWriteDatas=Entry(self.label_fWriteMemoire, font=fontSimple, width=entryLength)
+        self.EntryWriteDatas.grid(padx=2, row=1 ,column=2)
 
-        self.boutonWriteCaseMemoire=Button(self.labelWriteMemoire,text="write",bd=2, relief=RAISED, overrelief=RIDGE, bg=buttonColor)
+        self.boutonWriteCaseMemoire=Button(self.label_fWriteMemoire,text="Write",bd=2, width=14, relief=RAISED, overrelief=RIDGE, bg=buttonColor)
         self.boutonWriteCaseMemoire.grid(padx=2, pady=2, row=1 ,column=3)
-        
+	
+    
 	###### Fêntre 2 #########
+	# Zone de Text pour les consignes à appliqué
 	
-	
+	self.labelConsigne = Label(self.fenetre2,text="Consignes", fg=fgColor, font=titreFont, bg=bgColor)
+        self.labelConsigne.grid(row=0,column=0)
+	self.textConsigne = Text(self.fenetre2, height=20, width=80,font=("consolas",10))
+	self.textConsigne.grid(row=1,column=0)
+	# le scrollbar 
+	self.scrollbar = Scrollbar(self.fenetre2, command=self.textConsigne.yview)
+	self.scrollbar.grid(row=1,column=1,sticky="nsew")
+	self.textConsigne['yscrollcommand'] = self.scrollbar.set
 	# Zone de Text pour les logs
 	self.labelLogs = Label(self.fenetre2,text="Logs", fg=fgColor, font=titreFont, bg=bgColor)
-        self.labelLogs.grid(row=0,column=0)
-	self.textLogs = Text(self.fenetre2, height=30, width=50,font=("consolas",10))
-	self.textLogs.grid(row=1,column=0)
+        self.labelLogs.grid(row=2,column=0)
+	self.textLogs = Text(self.fenetre2, height=10, width=80,font=("consolas",10))
+	self.textLogs.grid(row=3,column=0)
 	# le scrollbar
 	self.scrollb = Scrollbar(self.fenetre2, command=self.textLogs.yview)
-	self.scrollb.grid(row=1,column=1,sticky="nsew")
+	self.scrollb.grid(row=3,column=1,sticky="nsew")
 	self.textLogs['yscrollcommand'] = self.scrollb.set
 	
-	self.boutonClear=Button(self.fenetre2,text="Effacer",bd=2, relief=RAISED, overrelief=RIDGE, bg=buttonColor,command=self.effacer_logs)
-        self.boutonClear.grid(padx=2, pady=2, row=2 ,column=0,columnspan=2)
+	self.boutonClear=Button(self.fenetre2,text="Effacer",bd=2,width=15, relief=RAISED, overrelief=RIDGE, bg=buttonColor,command=self.effacer_logs)
+        self.boutonClear.grid(padx=2, pady=2, row=4 ,column=0,columnspan=2)
 	
 	# On désactive certains bouttons au démarrage
 	self.boutonConfigurer.configure(state=DISABLED)
@@ -212,14 +234,37 @@ class Configuration(Frame):
 		    self.boutonValider.configure(state=DISABLED)
 		    self.EntryChoixPROG.configure(state=DISABLED)
 		    self.EntryChoixPN.configure(state=DISABLED)
-		try:
-		    # On affiche le message sur le MEP à charger
-	
-		    self.labeMEP.configure(text="Le MEP de "+choix_prog+" aussi va à être chargé")
-		    self.labeMEP.grid(padx=2,pady=2, row=3 ,column=2)
-		   
-		except Exception as error:
-		    print(repr(error))
+		    try:
+			# On affiche le message sur le MEP à charger
+			self.labeMEP.configure(text="Le MEP de "+choix_prog+" aussi va à être chargé")
+			self.labeMEP.grid(padx=2,pady=2, row=3 ,column=2)
+			# On récupère les valeurs du CRC MEP, CRC BBP et CRC CBDS ainsi que le contenu du MEP
+			chemin = "./docs/PNs/"+choix_pn
+			valeur_adresse_2c = 0x00
+			contenu_mep = ""
+			#on ouvre consignes.txt et on l'affiche dans la zone de texte
+			consigne = open(os.path.join(chemin+"/consignes.txt"),"r")
+			for line in consigne:
+			    self.textConsigne.insert(INSERT, line)
+			self.CRC_BBP = open(os.path.join(chemin+"/BBP/crc.txt"),"r").readline()[:-1]
+			if choix_prog == "Calibration":
+			    self.CRC_MEP = open(os.path.join(chemin+"/MEP/crc_calib.txt"),"r").readline()[:-1]
+			    contenu_mep = open(os.path.join(chemin+"/MEP/mep_calib.hex"),"r").readlines()
+			    valeur_adresse_2c = 0x01
+			elif choix_prog == "Flight":
+			    self.CRC_MEP = open(os.path.join(chemin+"/MEP/crc_flight.txt"),"r").readline()[:-1]
+			    contenu_mep = open(os.path.join(chemin+"/MEP/mep_flight.hex"),"r").readlines()
+			#print(contenu_mep)
+			# On écrit valeur_adresse_2c dans l'eeprom sur 1 octet
+		    
+			# On charge le MEP
+		    
+			# On charge le CRC_MEP
+		    
+			# On charge le CRC_CBDS
+		    
+		    except Exception as error:
+			print(repr(error))
 		    
 	except Exception as error:
 	    print('Erreur de saisie: ' + repr(error))
@@ -265,43 +310,78 @@ class Configuration(Frame):
 	    type_memoire = self.typeMemoire.get()
     
 	    ask_adress_memory = AskAdressMemory(memoire,octet,type_memoire)
-	    read_adress_memory = ReadAdressMemory('ics0can0',self.textLogs)
-	    read_adress_memory.start()
+	    # On démarre l'écoute des logs
+	    log1 = TerminalLog('ics0can0',self.textLogs)
+	    log1.start()
 	    ask_adress_memory.start()
 	except Exception as error:
 	    print('Erreur de saisie: ' + repr(error))
     ######################################################
     def write_memory(self):
         try:
-	    memoire = int(self.EntryReadCaseMemoire.get(),16)
-	    octet = self.nbOctet.get()
-	    type_memoire = self.typeMemoire.get()
-    
-	    ask_adress_memory = AskAdressMemory(memoire,octet,type_memoire)
-	    read_adress_memory = ReadAdressMemory('ics0can0',self.textLogs)
-	    read_adress_memory.start()
-	    ask_adress_memory.start()
+	    memoire = int(self.EntryWriteCaseMemoire.get(),16)
+	    data = int(self.EntryWriteDatas.get())
+	    if len(str(data))<=8:
+		write_adress_memory = WriteAdressMemory(memoire,data)
+		# On démarre l'écoute des logs
+		log2 = TerminalLog('ics0can0',self.textLogs)
+		log2.start()
+		write_adress_memory.start()
+	    else:
+		showwarning("Erreur de saisie","Impossible de depasser 8 caractères")
 	except Exception as error:
 	    print('Erreur de saisie: ' + repr(error))
     ######################################################
     def changer_pn(self):
         try:
-	    newPN = int(self.EntryUpdatePN.get(),16)
-	    print("pn",newPN)
+	    newPN = int(self.EntryUpdatePN.get())
+	    memoire = 0x14
+	    if len(str(newPN))==8:
+		write_adress_memory = WriteAdressMemory(memoire,newPN)
+		# On démarre l'écoute des logs
+		log2 = TerminalLog('ics0can0',self.textLogs)
+		log2.start()
+		write_adress_memory.start()
+	    else:
+		showwarning("Erreur de saisie","Il faut 8 caractères")
+	    
 	except Exception as error:
 	    print('Erreur de saisie: ' + repr(error))
     ######################################################
     def changer_sn(self):
         try:
-	    newSN = int(self.EntryUpdateSN.get(),16)
-	    print("sn",newSN)
+	    newSN = self.EntryUpdateSN.get()
+	    if len(newSN) == 7:
+		sn_1 = newSN[0:4].encode("hex")
+		sn_2 = newSN[4:7].encode("hex")
+		write_adress_memory_1 = WriteAdressMemory(0xc,sn_1)
+		write_adress_memory_2 = WriteAdressMemory(0x10,sn_2)
+		# On démarre l'écoute des logs
+		log2 = TerminalLog('ics0can0',self.textLogs)
+		log2.start()
+		write_adress_memory_1.start()
+		time.sleep(0.5)
+		write_adress_memory_2.start()
+	    else:
+		showwarning("Erreur de saisie","Il faut 7 caractères")
+	    
 	except Exception as error:
 	    print('Erreur de saisie: ' + repr(error))
     ######################################################
     def changer_date(self):
         try:
-	    newDate = int(self.EntryUpdateDate.get(),16)
+	    newDate = self.EntryUpdateDate.get()
 	    print("date",newDate)
+	    memoire = 0x24
+	    if len(str(newDate))==8:
+		write_adress_memory = WriteAdressMemory(memoire,newDate)
+		# On démarre l'écoute des logs
+		log2 = TerminalLog('ics0can0',self.textLogs)
+		log2.start()
+		write_adress_memory.start()
+	    else:
+		showwarning("Erreur de saisie","Il faut 8 caractères")
+	    
 	except Exception as error:
 	    print('Erreur de saisie: ' + repr(error))
     ######################################################

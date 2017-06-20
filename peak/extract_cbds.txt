@@ -1,0 +1,61 @@
+
+receivetest Version "Release_20150611_n"  (www.peak-system.com)
+------- Copyright (C) 2004-2009 PEAK System-Technik GmbH ------
+receivetest comes with ABSOLUTELY NO WARRANTY.     This is free
+software  and you are welcome  to redistribute it under certain
+conditions.   For   details   see    attached   COPYING   file.
+
+receivetest: device node="/dev/pcanusb32"
+             Extended frames are accepted, init with BTR0BTR1=0x031c
+receivetest: driver version = Release_20170110_n
+3228201727.784 receivetest: m s 0x00000001 4 00 00 00 00 
+receivetest: pending CAN status 0x0020 read.
+3228205861.504 receivetest: m s 0x000007bf 8 31 00 00 0c 00 00 00 00 
+3228205863.210 receivetest: m s 0x000007ff 8 31 00 00 0c 41 45 41 30 
+3228206015.829 receivetest: m s 0x000007bf 8 31 00 00 10 00 00 00 00 
+3228206017.536 receivetest: m s 0x000007ff 8 31 00 00 10 37 30 38 00 
+3228206169.45 receivetest: m s 0x000007bf 8 31 00 00 14 00 00 00 00 
+3228206170.794 receivetest: m s 0x000007ff 8 31 00 00 14 47 45 60 50 
+3228206326.314 receivetest: m s 0x000007bf 8 31 00 00 18 00 00 00 00 
+3228206328.64 receivetest: m s 0x000007ff 8 31 00 00 18 ff ff ff ff 
+3228206482.560 receivetest: m s 0x000007bf 8 31 00 00 1c 00 00 00 00 
+3228206484.309 receivetest: m s 0x000007ff 8 31 00 00 1c ff ff ff ff 
+3228206644.693 receivetest: m s 0x000007bf 8 31 00 00 20 00 00 00 00 
+3228206646.485 receivetest: m s 0x000007ff 8 31 00 00 20 00 ff ff ff 
+3228206801.920 receivetest: m s 0x000007bf 8 31 00 00 24 00 00 00 00 
+3228206803.669 receivetest: m s 0x000007ff 8 31 00 00 24 20 15 08 11 
+3228206957.184 receivetest: m s 0x000007bf 8 31 00 00 28 00 00 00 00 
+3228206958.933 receivetest: m s 0x000007ff 8 31 00 00 28 28 28 66 14 
+3228207112.448 receivetest: m s 0x000007bf 8 31 00 00 2c 00 00 00 00 
+3228207114.197 receivetest: m s 0x000007ff 8 31 00 00 2c 01 01 f0 01 
+3228207267.712 receivetest: m s 0x000007bf 8 31 00 00 30 00 00 00 00 
+3228207269.461 receivetest: m s 0x000007ff 8 31 00 00 30 00 01 33 00 
+3228207418.154 receivetest: m s 0x000007bf 8 31 00 00 34 00 00 00 00 
+3228207419.904 receivetest: m s 0x000007ff 8 31 00 00 34 ff ff ff ff 
+3228207577.344 receivetest: m s 0x000007bf 8 31 00 00 38 00 00 00 00 
+3228207579.93 receivetest: m s 0x000007ff 8 31 00 00 38 ff ff ff ff 
+3228207730.645 receivetest: m s 0x000007bf 8 31 00 00 3c 00 00 00 00 
+3228207732.394 receivetest: m s 0x000007ff 8 31 00 00 3c ff ff ff ff 
+3228207891.797 receivetest: m s 0x000007bf 8 31 00 00 40 00 00 00 00 
+3228207893.546 receivetest: m s 0x000007ff 8 31 00 00 40 ff ff ff ff 
+3228208051.968 receivetest: m s 0x000007bf 8 31 00 00 44 00 00 00 00 
+3228208053.717 receivetest: m s 0x000007ff 8 31 00 00 44 ff ff ff ff 
+3228208207.232 receivetest: m s 0x000007bf 8 31 00 00 48 00 00 00 00 
+3228208208.981 receivetest: m s 0x000007ff 8 31 00 00 48 ff ff ff ff 
+3228208360.533 receivetest: m s 0x000007bf 8 31 00 00 4c 00 00 00 00 
+3228208362.282 receivetest: m s 0x000007ff 8 31 00 00 4c ff ff ff ff 
+3228208512.896 receivetest: m s 0x000007bf 8 31 00 00 50 00 00 00 00 
+3228208514.645 receivetest: m s 0x000007ff 8 31 00 00 50 56 00 1a 00 
+receivetest: type            = usb
+             Serial Number   = 0xffffffff
+             Device Number   = 0
+             count of reads  = 37
+             count of writes = 0
+             count of errors = 0
+             count of irqs   = 48
+             last CAN status = 0x0020
+             last error      = 0
+             open paths      = 1
+             driver version  = Release_20170110_n
+receivetest: finished (0): 37 message(s) received
+
