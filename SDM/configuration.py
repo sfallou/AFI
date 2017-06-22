@@ -249,12 +249,14 @@ class Configuration(Frame):
 			self.CRC_BBP = open(os.path.join(chemin+"/BBP/crc.txt"),"r").readline()[:-1]
 			if choix_prog == "Calibration":
 			    self.CRC_MEP = open(os.path.join(chemin+"/MEP/crc_calib.txt"),"r").readline()[:-1]
-			    contenu_mep = open(os.path.join(chemin+"/MEP/mep_calib.hex"),"r").readlines()
+			    self.contenu_mep = "mep_calibration_"+self.nom_fichier_pn(choix_pn)
+			    self.contenu_mep = getattr(data,self.contenu_mep)
+			    #print (self.contenu_mep)
 			    valeur_adresse_2c = 0x01
 			elif choix_prog == "Flight":
 			    self.CRC_MEP = open(os.path.join(chemin+"/MEP/crc_flight.txt"),"r").readline()[:-1]
-			    contenu_mep = open(os.path.join(chemin+"/MEP/mep_flight.hex"),"r").readlines()
-			#print(contenu_mep)
+			    self.contenu_mep = "mep_flight_"+self.nom_fichier_pn(choix_pn)
+			    self.contenu_mep = getattr(data,self.contenu_mep)
 			# On écrit valeur_adresse_2c dans l'eeprom sur 1 octet
 		    
 			# On charge le MEP
@@ -387,6 +389,15 @@ class Configuration(Frame):
     ######################################################
     def effacer_logs(self):
 	self.textLogs.delete(0.0,END)
+    ######################################################
+    def nom_fichier_pn(self,x):
+	return{
+	    "474560-1x":"474560_1x",
+	    "474560-2x":"474560_2x",
+	    "474560-4x-5x":"474560_4x_5x",
+	    "475571-x":"475571_x",
+	    "474449-5":"474449_5",
+	}[x]
 
 	    
     

@@ -99,7 +99,28 @@ class WriteAdressMemory(threading.Thread):
 	    bus.send(msg)
 	except can.CanError:
 	    print("Message NOT sent")
-	    
+
+##################################################################
+
+"""class Configurer(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+
+    def run(self):
+        messages = []
+        bus = can.interface.Bus()
+        for d in data.read_config:
+            messages.append(can.Message(arbitration_id=0x7bf,data=d,extended_id=False))
+        
+        for msg in messages:
+            try:
+                bus.send(msg)
+                #print("Message sent on {}".format(bus.channel_info))
+            except can.CanError:
+                print("Message NOT sent")
+            time.sleep(0.3)
+"""            
+
 ##############################################################################
 
 if __name__ == '__main__':
