@@ -240,7 +240,7 @@ class Configuration(Frame):
 			self.labeMEP.grid(padx=2,pady=2, row=3 ,column=2)
 			# On récupère les valeurs du CRC MEP, CRC BBP et CRC CBDS ainsi que le contenu du MEP
 			chemin = "./docs/PNs/"+choix_pn
-			valeur_adresse_2c = 0x00
+			self.valeur_adresse_2c = 0x00
 			contenu_mep = ""
 			#on ouvre consignes.txt et on l'affiche dans la zone de texte
 			consigne = open(os.path.join(chemin+"/consignes.txt"),"r")
@@ -250,20 +250,18 @@ class Configuration(Frame):
 			if choix_prog == "Calibration":
 			    self.CRC_MEP = open(os.path.join(chemin+"/MEP/crc_calib.txt"),"r").readline()[:-1]
 			    self.contenu_mep = "mep_calibration_"+self.nom_fichier_pn(choix_pn)
-			    self.contenu_mep = getattr(data,self.contenu_mep)
+			    #self.contenu_mep = getattr(data,self.contenu_mep)
 			    #print (self.contenu_mep)
-			    valeur_adresse_2c = 0x01
+			    self.valeur_adresse_2c = 0x01
 			elif choix_prog == "Flight":
 			    self.CRC_MEP = open(os.path.join(chemin+"/MEP/crc_flight.txt"),"r").readline()[:-1]
 			    self.contenu_mep = "mep_flight_"+self.nom_fichier_pn(choix_pn)
-			    self.contenu_mep = getattr(data,self.contenu_mep)
+			    
 			# On écrit valeur_adresse_2c dans l'eeprom sur 1 octet
-		    
-			# On charge le MEP
-		    
-			# On charge le CRC_MEP
-		    
-			# On charge le CRC_CBDS
+			# Puis on charge le MEP dans la mémoire flash
+			# Ensuite on charge le CRC_MEP dans le NVM
+			# Et enfin on charge le CRC_CBDS
+			
 		    
 		    except Exception as error:
 			print(repr(error))
@@ -273,7 +271,10 @@ class Configuration(Frame):
     
     #######################################################
     def configurer(self):
+	#config = Configurer_carte(self.valeur_adresse_2c, self.contenu_mep, self.CRC_MEP)
+	#config.start()
 	pass
+	
     #####################################################
     def open_dongle(self):
 	#self.close_dongle() # au cas ou le processus etait toujours en vie

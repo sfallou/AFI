@@ -88,6 +88,10 @@ class ReadConfig(threading.Thread):
         file.close()
 	file = open("resultat_nvm.txt","r")
 	tab = file.readlines()
+	if len(tab) == 0:
+	    # on affiche une message d'erreur
+	    showinfo("Problème de communication!","La communication n'est pas établie! Vérifier vos branchements")
+	    return
 	for i in range (len(tab)):
 	    if i==5:
 		self.pn.delete(0,END)
@@ -211,6 +215,7 @@ class AskConfig(threading.Thread):
                 #print("Message sent on {}".format(bus.channel_info))
             except can.CanError:
                 print("Message NOT sent")
+		return
             time.sleep(0.3)
             
 #############################################################################
