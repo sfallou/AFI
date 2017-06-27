@@ -37,7 +37,7 @@ class SDM(Tk):
 	
     def menu(self):
         # creation du menu principale
-        menubar = Menu(self,bg=bgColor)
+        """menubar = Menu(self,bg=bgColor)
         self.config(menu=menubar)
         menuTestReception = Menu(menubar,tearoff=0, bg='#03224C', postcommand=self.test_reception)
         menubar.add_cascade(label="Test de Reception", menu=menuTestReception)
@@ -51,15 +51,31 @@ class SDM(Tk):
         menubar.add_cascade(label= "Help", menu=menuHelp)
         menuAbout = Menu(menubar,tearoff=0, bg='#03224C', postcommand=self.rien)
         menubar.add_cascade(label= "About", menu=menuAbout) 
-        
+	"""
+	self.FenetreMenu = Frame(self, bd =5, relief =RAISED, bg=bgColor)
+	self.FenetreMenu.pack(side=TOP)
+	################################
+        #Menu
+        ################################
+	self.test_menu = Button(self.FenetreMenu,text="Test Reception",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColor,command=self.test_reception)
+        self.test_menu.grid(padx=2,row=0,column=0)
+	self.config_menu = Button(self.FenetreMenu,text="Configuration",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColor,command=self.configuration)
+        self.config_menu.grid(padx=2,row=0,column=1)
+	self.calib_menu = Button(self.FenetreMenu,text="Calibration",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColor,command=self.configuration)
+        self.calib_menu.grid(padx=2,row=0,column=2)
+	self.pab_menu = Button(self.FenetreMenu,text="PAB",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColor,command=self.configuration)
+        self.pab_menu.grid(padx=2,row=0,column=3)
+	self.help_menu = Button(self.FenetreMenu,text="Help",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColor,command=self.configuration)
+        self.help_menu.grid(padx=2,row=0,column=4)
+	self.about_menu = Button(self.FenetreMenu,text="About",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColor,command=self.configuration)
+        self.about_menu.grid(padx=2,row=0,column=5)
         ################################
         #L'entete
         ################################
-        self.entete = Frame(self, bd =1, relief =RAISED)
-        self.entete.pack(side=TOP)
-        self.textEntete=Label(self.entete,text='Air France Industrie ', width=900,bd=1, bg ='#03224C', relief=RAISED, fg="#ff0000", font=('Helvetica', 14))
-        #self.textEntete.grid(row =0, column =0, columnspan =3, padx =1, pady =1)
-        self.textEntete.pack(side=TOP)
+        
+        self.textEntete=Label(self.FenetreMenu,text='Air France Industrie ', width=50,bd=1, bg ='#03224C', relief=RAISED, fg="#ff0000", font=('Helvetica', 14))
+        self.textEntete.grid(row =0, column =6, padx =2)
+        
 	
     def cacher(self):
 	self.testReceptionPage.pack_forget()
