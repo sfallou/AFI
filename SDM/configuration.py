@@ -271,8 +271,11 @@ class Configuration(Frame):
 			self.EntryMEPCRC.delete(0,END)
 			self.EntryMEPCRC.insert(0,self.CRC_MEP)
 			self.EntryCBDSCRC.delete(0,END)
-			cbds_crc = str(getattr(data,self.crc_cbds)[4:])
-			self.EntryCBDSCRC.insert(0,cbds_crc)
+			cbds_crc = getattr(data,self.crc_cbds)[4:]
+			res = ""
+			for l in cbds_crc:
+			    res +=str(hex(l))[2:] 
+			self.EntryCBDSCRC.insert(0,res)
 		    
 		    except Exception as error:
 			print(repr(error))

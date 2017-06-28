@@ -27,10 +27,10 @@ class TerminalLog(threading.Thread):
                 print(message)
                 info = str(message)+"\n" 
 		if info[40:44] == "07ff":
-		    self.terminal.insert(INSERT, "Trame reçue:\n")
+		    self.terminal.insert('0.0', "Trame reçue:\n")
 		if info[40:44] == "07bf":
-		    self.terminal.insert(INSERT, "Trame émise:\n")
-		self.terminal.insert(INSERT, info)
+		    self.terminal.insert('0.0', "Trame émise:\n")
+		self.terminal.insert('0.0', info)
                 #file.write(info)
         #file.close() 
         
@@ -118,54 +118,55 @@ class Configurer_carte(threading.Thread):
         for d in self.mep:
             trames_mep.append(can.Message(arbitration_id=0x7bf,data=d,extended_id=False))
 	    
-	"""try:
+	try:
 	    # on change la valeur de l'adresse 2c
 	    d0 = [0x81, 0x00, 0x00, 0x2c, self.valeur_adresse_2c, 0x00, 0x00, 0x00]
 	    msg0 = can.Message(arbitration_id=0x7bf,data=d0,extended_id=False)
+	    #bus.send(msg0)
+	    # On charge le crc_mep
+	    data = [0x04]+[int(self.crc_mep[i:i+2],16) for i in range(0,len(self.crc_mep),2)]
+	    d2 = [0xb1]+[0x00]+[0x00]+data
+	    msg2 = can.Message(arbitration_id=0x7bf,data=d2,extended_id=False)
+	    #bus.send(msg2)
+	    # On charge le crc_cbds
+	    msg3 = can.Message(arbitration_id=0x7bf,data=self.crc_cbds,extended_id=False)
+	    #bus.send(msg3)
 	    bus.send(msg0)
+	    time.sleep(0.3)
+	    bus.send(msg2)
+	    time.sleep(0.3)
+	    bus.send(msg3)
+	    time.sleep(0.3)
 	except can.CanError:
 	    print("Message NOT sent")
 	    return
-	#time.sleep(3)
-	"""
-	"""# On charge le crc_bbp
-	try:
-	    data1 = [0x08]+[int(self.crc_bds[i:i+2]) for i in range(0,len(self.crc_cbds),2)]
-	    d1 = [0xb1]+[0x00]+[0x00]+data1
-	    msg1 = can.Message(arbitration_id=0x7bf,data=d1,extended_id=False)
-	    bus.send(msg1)
-	except can.CanError:
-	    print("Message NOT sent")
-	    return
-	time.sleep(3)
+	
+	
 	"""
 	# on charge le mep
 	for msg in trames_mep:
-            try:
-		if str(msg)[63:65] == "d2":
-		    bus.send(msg,3)
-                else:
-		    bus.send(msg)
-		"""if str(msg)[63:65] == "d2":
-		    time.sleep(1)
-		else:
-		    time.sleep(0.5)
-		"""
+            delai = 1
+	    if str(msg)[63:65] == "d2":
+		delai = 3
+	    time.sleep(delai)
+	    try:
+		bus.send(msg)
             except can.CanError:
                 print("Message NOT sent")
 		return
-	    print "Fin"
+	print "Fin"
 	    #time.sleep(0.1)
-	"""# On charge le crc_mep
+	
+	# On charge le crc_mep
 	try:
-	    data = [0x04]+[int(self.crc_mep[i:i+2]) for i in range(0,len(self.crc_mep),2)]
+	    data = [0x04]+[int(self.crc_mep[i:i+2],16) for i in range(0,len(self.crc_mep),2)]
 	    d2 = [0xb1]+[0x00]+[0x00]+data
 	    msg2 = can.Message(arbitration_id=0x7bf,data=d2,extended_id=False)
 	    bus.send(msg2)
 	except can.CanError:
 	    print("Message NOT sent")
 	    return
-	time.sleep(3)
+	time.sleep(1)
 	# On charge le crc_cbds
 	try:
 	    msg3 = can.Message(arbitration_id=0x7bf,data=self.crc_cbds,extended_id=False)
