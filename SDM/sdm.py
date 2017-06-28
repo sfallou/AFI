@@ -1,6 +1,7 @@
 # -*-coding:Utf-8 -*
 
 from Tkinter import *
+from PIL import ImageTk, Image
 from tkMessageBox import *
 import testReception as tR
 import configuration as conf
@@ -14,6 +15,7 @@ fontSimple =('Helvetica', 12) # police des textes basiques
 entryLength = 10 # Taille des Entry
 buttonLength = 10 # Taille des boutons
 buttonColor = '#C0C0C0' # Couleur des boutons
+buttonColorMenu = 'steel blue' # Couleur des boutons du menu
 tailleBorder = 2 # borderwidth
     
 # la classe SDM (Smoke Detector Maintenance)
@@ -37,45 +39,43 @@ class SDM(Tk):
 	
     def menu(self):
         # creation du menu principale
-        """menubar = Menu(self,bg=bgColor)
-        self.config(menu=menubar)
-        menuTestReception = Menu(menubar,tearoff=0, bg='#03224C', postcommand=self.test_reception)
-        menubar.add_cascade(label="Test de Reception", menu=menuTestReception)
-	menuConfiguration = Menu(menubar,tearoff=0, bg='#03224C', postcommand=self.configuration)
-        menubar.add_cascade(label= "Configuration", menu=menuConfiguration)
-        menuCalibration = Menu(menubar,tearoff=0, bg='#03224C', postcommand=self.rien)
-        menubar.add_cascade(label= "Calibration", menu=menuCalibration)
-        menuPAB = Menu(menubar,tearoff=0, bg='#03224C', postcommand=self.rien)
-        menubar.add_cascade(label= "PAB", menu=menuPAB)
-        menuHelp = Menu(menubar,tearoff=0, bg='#03224C', postcommand=self.rien)
-        menubar.add_cascade(label= "Help", menu=menuHelp)
-        menuAbout = Menu(menubar,tearoff=0, bg='#03224C', postcommand=self.rien)
-        menubar.add_cascade(label= "About", menu=menuAbout) 
-	"""
 	self.FenetreMenu = Frame(self, bd =5, relief =RAISED, bg=bgColor)
 	self.FenetreMenu.pack(side=TOP)
 	################################
+        #Logo à gauche entete
+        ################################
+        
+    
+	self.frameEntete0 = Frame(self.FenetreMenu, bg =bgColor)
+	self.frameEntete0.grid(row =0, column =0, padx =2)
+	self.logo0 = ImageTk.PhotoImage(Image.open("./docs/img/logo2.jpg"))
+	self.panel0 = Label(self.frameEntete0, image = self.logo0, bd=1)
+        self.panel0.pack( fill = "both", expand = "yes")
+	################################
         #Menu
         ################################
-	self.test_menu = Button(self.FenetreMenu,text="Test Reception",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColor,command=self.test_reception)
-        self.test_menu.grid(padx=2,row=0,column=0)
-	self.config_menu = Button(self.FenetreMenu,text="Configuration",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColor,command=self.configuration)
-        self.config_menu.grid(padx=2,row=0,column=1)
-	self.calib_menu = Button(self.FenetreMenu,text="Calibration",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColor,command=self.configuration)
-        self.calib_menu.grid(padx=2,row=0,column=2)
-	self.pab_menu = Button(self.FenetreMenu,text="PAB",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColor,command=self.configuration)
-        self.pab_menu.grid(padx=2,row=0,column=3)
-	self.help_menu = Button(self.FenetreMenu,text="Help",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColor,command=self.configuration)
-        self.help_menu.grid(padx=2,row=0,column=4)
-	self.about_menu = Button(self.FenetreMenu,text="About",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColor,command=self.configuration)
-        self.about_menu.grid(padx=2,row=0,column=5)
+	self.test_menu = Button(self.FenetreMenu,text="Test Reception",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColorMenu,command=self.test_reception)
+        self.test_menu.grid(padx=2,row=0,column=1)
+	self.config_menu = Button(self.FenetreMenu,text="Configuration",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColorMenu,command=self.configuration)
+        self.config_menu.grid(padx=2,row=0,column=2)
+	self.calib_menu = Button(self.FenetreMenu,text="Calibration",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColorMenu,command=self.configuration)
+        self.calib_menu.grid(padx=2,row=0,column=3)
+	self.pab_menu = Button(self.FenetreMenu,text="PAB",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColorMenu,command=self.configuration)
+        self.pab_menu.grid(padx=2,row=0,column=4)
+	self.help_menu = Button(self.FenetreMenu,text="Help",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColorMenu,command=self.configuration)
+        self.help_menu.grid(padx=2,row=0,column=5)
+	self.about_menu = Button(self.FenetreMenu,text="About",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColorMenu,command=self.configuration)
+        self.about_menu.grid(padx=2,row=0,column=6)
         ################################
-        #L'entete
+        #Logo à droite entete
         ################################
-        
-        self.textEntete=Label(self.FenetreMenu,text='Air France Industrie ', width=50,bd=1, bg ='#03224C', relief=RAISED, fg="#ff0000", font=('Helvetica', 14))
-        self.textEntete.grid(row =0, column =6, padx =2)
-        
+       
+	"""self.frameEntete = Frame(self.FenetreMenu, bg =bgColor)
+	self.frameEntete.grid(row =0, column =7, padx =2)
+	self.logo = ImageTk.PhotoImage(Image.open("./docs/img/logo1.jpg"))
+	self.panel = Label(self.frameEntete, image = self.logo, bd=1)
+        self.panel.pack( fill = "both", expand = "yes")
+	"""
 	
     def cacher(self):
 	self.testReceptionPage.pack_forget()

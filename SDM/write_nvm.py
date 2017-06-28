@@ -105,12 +105,12 @@ class WriteAdressMemory(threading.Thread):
 ##################################################################
 
 class Configurer_carte(threading.Thread):
-    def __init__(self, val2c, mep, crc_mep):
+    def __init__(self, val2c, mep, crc_mep, crc_cbds):
         threading.Thread.__init__(self)
 	self.valeur_adresse_2c = val2c
 	self.mep = getattr(data,mep)
 	self.crc_mep = crc_mep
-	self.crc_cbds = ""
+	self.crc_cbds = getattr(data,crc_cbds)
 
     def run(self):
         trames_mep = []
@@ -118,40 +118,58 @@ class Configurer_carte(threading.Thread):
         for d in self.mep:
             trames_mep.append(can.Message(arbitration_id=0x7bf,data=d,extended_id=False))
 	    
-	try:
+	"""try:
 	    # on change la valeur de l'adresse 2c
-	    d1 = [0x81, 0x00, 0x00, 0x2c, self.valeur_adresse_2c, 0x00, 0x00, 0x00]
+	    d0 = [0x81, 0x00, 0x00, 0x2c, self.valeur_adresse_2c, 0x00, 0x00, 0x00]
+	    msg0 = can.Message(arbitration_id=0x7bf,data=d0,extended_id=False)
+	    bus.send(msg0)
+	except can.CanError:
+	    print("Message NOT sent")
+	    return
+	#time.sleep(3)
+	"""
+	"""# On charge le crc_bbp
+	try:
+	    data1 = [0x08]+[int(self.crc_bds[i:i+2]) for i in range(0,len(self.crc_cbds),2)]
+	    d1 = [0xb1]+[0x00]+[0x00]+data1
 	    msg1 = can.Message(arbitration_id=0x7bf,data=d1,extended_id=False)
 	    bus.send(msg1)
 	except can.CanError:
 	    print("Message NOT sent")
 	    return
+	time.sleep(3)
+	"""
 	# on charge le mep
 	for msg in trames_mep:
             try:
-                bus.send(msg)
+		if str(msg)[63:65] == "d2":
+		    bus.send(msg,3)
+                else:
+		    bus.send(msg)
+		"""if str(msg)[63:65] == "d2":
+		    time.sleep(1)
+		else:
+		    time.sleep(0.5)
+		"""
             except can.CanError:
                 print("Message NOT sent")
 		return
-	    if str(msg)[63:65] == "d2":
-		time.sleep(0.3)
-	    else:
-		time.sleep(0.1)
-	# On charge le crc_mep
+	    print "Fin"
+	    #time.sleep(0.1)
+	"""# On charge le crc_mep
 	try:
-	    data = [0x04]+[int(self.donnee[i:i+2]) for i in range(0,len(self.crc_mep),2)]
+	    data = [0x04]+[int(self.crc_mep[i:i+2]) for i in range(0,len(self.crc_mep),2)]
 	    d2 = [0xb1]+[0x00]+[0x00]+data
-	    msg2 = can.Message(arbitration_id=0x7bf,data=d1,extended_id=False)
+	    msg2 = can.Message(arbitration_id=0x7bf,data=d2,extended_id=False)
 	    bus.send(msg2)
 	except can.CanError:
 	    print("Message NOT sent")
 	    return
-	"""# On charge le crc_cbds
+	time.sleep(3)
+	# On charge le crc_cbds
 	try:
-	    data = [0x04]+[int(self.donnee[i:i+2]) for i in range(0,len(self.crc_mep),2)]
-	    d2 = [0xb1]+[0x00]+[0x00]+data
-	    msg2 = can.Message(arbitration_id=0x7bf,data=d1,extended_id=False)
-	    bus.send(msg2)
+	    msg3 = can.Message(arbitration_id=0x7bf,data=self.crc_cbds,extended_id=False)
+	    bus.send(msg3)
 	except can.CanError:
 	    print("Message NOT sent")
 	    return

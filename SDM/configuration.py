@@ -242,6 +242,7 @@ class Configuration(Frame):
 			chemin = "./docs/PNs/"+choix_pn
 			self.valeur_adresse_2c = 0x00
 			contenu_mep = ""
+			self.crc_cbds = ""
 			#on ouvre consignes.txt et on l'affiche dans la zone de texte
 			consigne = open(os.path.join(chemin+"/consignes.txt"),"r")
 			for line in consigne:
@@ -250,18 +251,28 @@ class Configuration(Frame):
 			if choix_prog == "Calibration":
 			    self.CRC_MEP = open(os.path.join(chemin+"/MEP/crc_calib.txt"),"r").readline()[:-1]
 			    self.contenu_mep = "mep_calibration_"+self.nom_fichier_pn(choix_pn)
+			    self.crc_cbds = "crc_cbds_calibration_"+self.nom_fichier_pn(choix_pn)
 			    #self.contenu_mep = getattr(data,self.contenu_mep)
 			    #print (self.contenu_mep)
 			    self.valeur_adresse_2c = 0x01
 			elif choix_prog == "Flight":
 			    self.CRC_MEP = open(os.path.join(chemin+"/MEP/crc_flight.txt"),"r").readline()[:-1]
 			    self.contenu_mep = "mep_flight_"+self.nom_fichier_pn(choix_pn)
+			    self.crc_cbds = "crc_cbds_flight_"+self.nom_fichier_pn(choix_pn)
 			    
 			# On écrit valeur_adresse_2c dans l'eeprom sur 1 octet
 			# Puis on charge le MEP dans la mémoire flash
 			# Ensuite on charge le CRC_MEP dans le NVM
 			# Et enfin on charge le CRC_CBDS
 			
+			# on affiche les valeurs récupéréés 
+			self.EntryBBPCRC.delete(0,END)
+			self.EntryBBPCRC.insert(0,self.CRC_BBP)
+			self.EntryMEPCRC.delete(0,END)
+			self.EntryMEPCRC.insert(0,self.CRC_MEP)
+			self.EntryCBDSCRC.delete(0,END)
+			cbds_crc = str(getattr(data,self.crc_cbds)[4:])
+			self.EntryCBDSCRC.insert(0,cbds_crc)
 		    
 		    except Exception as error:
 			print(repr(error))
@@ -271,9 +282,12 @@ class Configuration(Frame):
     
     #######################################################
     def configurer(self):
-	#config = Configurer_carte(self.valeur_adresse_2c, self.contenu_mep, self.CRC_MEP)
-	#config.start()
-	pass
+	config = Configurer_carte(self.valeur_adresse_2c, self.contenu_mep, self.CRC_MEP, self.crc_cbds)
+	# On démarre l'écoute des logs
+	log0 = TerminalLog('ics0can0',self.textLogs)
+	log0.start()
+	config.start()
+	#pass
 	
     #####################################################
     def open_dongle(self):
