@@ -137,6 +137,19 @@ class Configurer_carte(threading.Thread):
 	    time.sleep(0.3)
 	    bus.send(msg3)
 	    time.sleep(0.3)
+	    # on charge le mep
+	    for msg in trames_mep:
+		try:
+		    if str(msg)[63:65] == "d2":
+			bus.send(msg)
+			time.sleep(0.05)
+		    else:
+			bus.send(msg)
+			time.sleep(0.02)
+		except can.CanError:
+		    print("Message NOT sent")
+		    return
+	    print ("fin")
 	except can.CanError:
 	    print("Message NOT sent")
 	    return
