@@ -1,21 +1,3 @@
-
-receivetest Version "Release_20150611_n"  (www.peak-system.com)
-------- Copyright (C) 2004-2009 PEAK System-Technik GmbH ------
-receivetest comes with ABSOLUTELY NO WARRANTY.     This is free
-software  and you are welcome  to redistribute it under certain
-conditions.   For   details   see    attached   COPYING   file.
-
-receivetest: device node="/dev/pcanusb32"
-             Extended frames are accepted, init with BTR0BTR1=0x031c
-receivetest: driver version = Release_20170110_n
-4093947248.761 receivetest: m s 0x00000001 4 00 00 00 00 
-receivetest: pending CAN status 0x0020 read.
-4093961755.767 receivetest: m s 0x000007bf 8 81 00 00 2c 01 00 00 00 
-4093961760.204 receivetest: m s 0x000007ff 8 06 00 00 00 00 00 00 00 
-4093962056.652 receivetest: m s 0x000007bf 8 b1 00 00 04 21 29 8c b4 
-4093962069.623 receivetest: m s 0x000007ff 8 06 00 00 00 00 00 00 00 
-4093962357.409 receivetest: m s 0x000007bf 8 b1 00 00 00 20 88 17 94 
-4093962370.380 receivetest: m s 0x000007ff 8 06 00 00 00 00 00 00 00 
 4093962658.465 receivetest: m s 0x000007bf 8 d2 00 20 00 6d ab f0 c2 
 4093962661.623 receivetest: m s 0x000007ff 8 06 00 00 00 00 00 00 00 
 4093962709.324 receivetest: m s 0x000007bf 8 5d ef 66 f0 12 00 ff ff 
@@ -9168,16 +9150,3 @@ receivetest: pending CAN status 0x0020 read.
 4094141549.644 receivetest: m s 0x000007bf 8 ff ff ff ff ff ff ff ff 
 4094141570.167 receivetest: m s 0x000007bf 8 ff ff ff ff ff ff ff ff 
 4094141587.191 receivetest: m s 0x000007ff 8 06 00 00 00 00 00 00 00 
-receivetest: type            = usb
-             Serial Number   = 0xffffffff
-             Device Number   = 0
-             count of reads  = 9159
-             count of writes = 0
-             count of errors = 0
-             count of irqs   = 9359
-             last CAN status = 0x0020
-             last error      = 0
-             open paths      = 1
-             driver version  = Release_20170110_n
-receivetest: finished (0): 9159 message(s) received
-

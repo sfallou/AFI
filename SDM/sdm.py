@@ -5,6 +5,7 @@ from PIL import ImageTk, Image
 from tkMessageBox import *
 import testReception as tR
 import configuration as conf
+import autres as autr
 
 bgColor = 'light yellow' # Background color
 fgColor = "#03224C" 
@@ -36,6 +37,7 @@ class SDM(Tk):
 	self.testReceptionPage = tR.TestReception(fenetre_principale=self)
 	self.testReceptionPage.pack()
 	self.configurationPage = conf.Configuration(fenetre_principale=self)
+	self.autrePage = autr.Autres(fenetre_principale=self)
 	
     def menu(self):
         # creation du menu principale
@@ -62,10 +64,12 @@ class SDM(Tk):
         self.calib_menu.grid(padx=2,row=0,column=3)
 	self.pab_menu = Button(self.FenetreMenu,text="PAB",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColorMenu,command=self.configuration)
         self.pab_menu.grid(padx=2,row=0,column=4)
+	self.autre_menu = Button(self.FenetreMenu,text="Autres",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColorMenu,command=self.autre)
+        self.autre_menu.grid(padx=2,row=0,column=5)
 	self.help_menu = Button(self.FenetreMenu,text="Help",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColorMenu,command=self.configuration)
-        self.help_menu.grid(padx=2,row=0,column=5)
+        self.help_menu.grid(padx=2,row=0,column=6)
 	self.about_menu = Button(self.FenetreMenu,text="About",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColorMenu,command=self.configuration)
-        self.about_menu.grid(padx=2,row=0,column=6)
+        self.about_menu.grid(padx=2,row=0,column=7)
         ################################
         #Logo à droite entete
         ################################
@@ -80,6 +84,7 @@ class SDM(Tk):
     def cacher(self):
 	self.testReceptionPage.pack_forget()
 	self.configurationPage.pack_forget()
+	self.autrePage.pack_forget()
     
     def test_reception(self):
 	self.cacher()
@@ -89,6 +94,9 @@ class SDM(Tk):
 	self.cacher()
 	self.configurationPage.pack()
     
+    def autre(self):
+	self.cacher()
+	self.autrePage.pack()
     def rien(self):
 	pass
 	

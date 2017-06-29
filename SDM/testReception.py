@@ -126,7 +126,7 @@ class TestReception(Frame):
 	self.frame2 = Frame(self.fenetre2,bg=bgColor) # sert à bien arranger les labels et les entry bbcrc ...
 	self.frame2.pack(pady=5)
 	
-	self.labelBBPCRC_ref = Label(self.frame2,text="CRC BBP Réf ", fg=fgColor, font=fontSimple, bg=bgColor)
+	self.labelBBPCRC_ref = Label(self.frame2,text="CRC BBP réf ", fg=fgColor, font=fontSimple, bg=bgColor)
         self.labelBBPCRC_ref.grid(padx=2,pady=2,row=0,column=0)
 	
 	self.labelBBPCRC_calc = Label(self.frame2,text="CRC BBP calculé", fg=fgColor, font=fontSimple, bg=bgColor)
@@ -150,7 +150,7 @@ class TestReception(Frame):
 	self.canvas.create_oval(0,0,35,35, fill=self.couleurSignal2)
 	
 	##
-	self.labelMEPCRC_ref = Label(self.frame2,text="CRC MEP Réf ", fg=fgColor, font=fontSimple, bg=bgColor)
+	self.labelMEPCRC_ref = Label(self.frame2,text="CRC MEP réf ", fg=fgColor, font=fontSimple, bg=bgColor)
         self.labelMEPCRC_ref.grid(padx=2,pady=2,row=2,column=0)
 	
 	self.labelMEPCRC_calc = Label(self.frame2,text="CRC MEP calculé", fg=fgColor, font=fontSimple, bg=bgColor)
@@ -265,21 +265,6 @@ class TestReception(Frame):
 	    self.boutonDelete.configure(state=DISABLED)
     #####################################################
     def delete_nvm(self):
-	"""# on affiche le message d'attente dans les logs
-	self.textLogs.delete('0.0',END)
-	self.textLogs.insert('0.0', "Clearing ...")
-	messages = []
-	bus = can.interface.Bus()
-        for d in data.clear_nvm:
-            messages.append(can.Message(arbitration_id=0x7bf,data=d,extended_id=False))
-        
-        for msg in messages:
-            try:
-                bus.send(msg)
-            except can.CanError:
-                print("Message NOT sent")
-            time.sleep(0.3)
-	"""
 	log = Logs(self.textLogs,self.progressBar,self.boutonDelete)
 	log.start()
 	self.boutonDelete.configure(state=DISABLED)
