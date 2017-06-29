@@ -140,7 +140,7 @@ class Configurer_carte(threading.Thread):
 	    # on charge le mep
 	    for msg in trames_mep:
 		try:
-		    if str(msg)[63:65] == "d2":
+		    if str(msg)[63:68] == "d2 00":
 			bus.send(msg)
 			time.sleep(0.05)
 		    else:
