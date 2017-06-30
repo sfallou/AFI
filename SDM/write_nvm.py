@@ -163,7 +163,7 @@ class Configurer_carte(threading.Thread):
 	    print("Message NOT sent")
 	    return
 	# on affiche une message d'information
-	showinfo("Configuration Terminée!","L'équipement  a été correctement configurée")
+	showinfo("Configuration Terminée!","L'équipement  a été correctement configuré")
 	
 	self.btConfig.configure(state=NORMAL)
 	
