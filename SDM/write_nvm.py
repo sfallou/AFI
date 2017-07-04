@@ -149,7 +149,7 @@ class Configurer_carte(threading.Thread):
 	    for msg in trames_mep:
 		i += 1
 		try:
-		    if "d2 00" in str(msg):
+		    if str(msg)[63:68] == "d2 00":
 			bus.send(msg)
 			time.sleep(0.05)
 		    else:

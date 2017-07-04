@@ -7,8 +7,9 @@ from tkMessageBox import *
 import can
 import time                    ## Time-related library
 import threading               ## Threading-based Timer library
-import sys
 import os
+import sys
+sys.path.append("./data")
 import data
 
 bgColor = 'white' # Background color
