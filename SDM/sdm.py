@@ -33,7 +33,7 @@ class SDM(Tk):
 	"""
 	####
 	self.menu()
-	###@
+	###
 	self.testReceptionPage = tR.TestReception(fenetre_principale=self)
 	self.testReceptionPage.pack()
 	self.configurationPage = conf.Configuration(fenetre_principale=self)
@@ -51,7 +51,7 @@ class SDM(Tk):
 	self.frameEntete0 = Frame(self.FenetreMenu, bg =bgColor)
 	self.frameEntete0.grid(row =0, column =0, padx =2)
 	self.logo0 = ImageTk.PhotoImage(Image.open("./docs/img/logo2.jpg"))
-	self.panel0 = Label(self.frameEntete0, image = self.logo0, bd=1)
+	self.panel0 = Button(self.frameEntete0, image = self.logo0, bd=1,command=self.new)
         self.panel0.pack( fill = "both", expand = "yes")
 	################################
         #Menu
@@ -68,7 +68,7 @@ class SDM(Tk):
         self.autre_menu.grid(padx=2,row=0,column=5)
 	self.help_menu = Button(self.FenetreMenu,text="Help",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColorMenu,command=self.configuration)
         self.help_menu.grid(padx=2,row=0,column=6)
-	self.about_menu = Button(self.FenetreMenu,text="About",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColorMenu,command=self.configuration)
+	self.about_menu = Button(self.FenetreMenu,text="About",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColorMenu,command=self.autre)
         self.about_menu.grid(padx=2,row=0,column=7)
         ################################
         #Logo à droite entete
@@ -80,7 +80,16 @@ class SDM(Tk):
 	self.panel = Label(self.frameEntete, image = self.logo, bd=1)
         self.panel.pack( fill = "both", expand = "yes")
 	"""
+    def new(self):
+	self.testReceptionPage.destroy()
+	self.configurationPage.destroy()
+	self.autrePage.destroy()
 	
+	self.testReceptionPage = tR.TestReception(fenetre_principale=self)
+	self.testReceptionPage.pack()
+	self.configurationPage = conf.Configuration(fenetre_principale=self)
+	self.autrePage = autr.Autres(fenetre_principale=self)
+    
     def cacher(self):
 	self.testReceptionPage.pack_forget()
 	self.configurationPage.pack_forget()

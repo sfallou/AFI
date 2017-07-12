@@ -203,11 +203,18 @@ class TestReception(Frame):
 	self.boutonSave.configure(state=DISABLED)
 	self.boutonDelete.configure(state=DISABLED)
 	
+	# Liste des entries
+	self.entries =[self.EntryPN,self.EntrySN,self.EntryDate,self.EntryBBPCRC_ref,self.EntryBBPCRC_calc,self.EntryBBPCRC_actu,
+	self.EntryMEPCRC_ref,self.EntryMEPCRC_actu,self.EntryMEPCRC_calc,self.EntryTypeProg]
     ####################################################
     def valider_choix(self):
 	try:
 	    choix_pn = self.choixPN.get()
 	    if choix_pn  != "Choisir le type de PN":
+		#on efface le contenu des champs
+		self.textConsigne.delete('0.0',END)
+		self.clean_interface()
+		#####
 		self.PN = choix_pn
 		self.boutonLoad.configure(state=NORMAL)
 		self.boutonValider.configure(state=DISABLED)
@@ -233,6 +240,8 @@ class TestReception(Frame):
 	res = self.open_dongle()
 	# Si res = 1, on lance le test et on affiche les trames CAN dans la zone logs ainsi que la progressBar
 	if res:
+	    self.clean_interface()
+	    ########
 	    interface = 'ics0can0'
 	    ask_config = AskConfig()
 	    read_config = ReadConfig(
@@ -277,6 +286,15 @@ class TestReception(Frame):
 	    pass
 	for child in widget.winfo_children():
 	    self.disable_fenetre(child,state=state)
+    #######################################################
+    
+    def clean_interface(self):
+	self.textLogs.delete('0.0',END)
+	self.textFaults.delete('0.0',END)
+	self.canvas.create_oval(0,0,35,35, fill=self.couleurSignal2)
+	self.canvas2.create_oval(0,0,35,35, fill=self.couleurSignal2)
+	for child in self.entries:
+	    child.delete(0,END)
     #####################################################
     def open_dongle(self):
 	#self.close_dongle() # au cas ou le processus etait toujours en vie
