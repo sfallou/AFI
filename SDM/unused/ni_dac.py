@@ -24,12 +24,12 @@ def mean(fichier):
     
 def mesure():
 	try:
-	    os.system('sudo /usr/local/bin/natinst/rpi/aiondemand -c 0 -s 500 -t 10000 -v > resultat.txt')
+	    os.system('sudo /usr/local/bin/natinst/rpi/aiondemand -c 0 -s 500 -t 10000 -v > tmp.txt')
 	except:
 	    print ("impossible")
 
 while 1:
     mesure()
-    mean("resultat.txt")
-    time.sleep(0.5)
+    mean("tmp.txt")
+    time.sleep(0.2)
     

@@ -11,7 +11,14 @@ import os
 import time                    ## Time-related library
 import datetime
 import data
-
+import classes
+#---------Imports for graphe
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+#---------End of imports
 
 bgColor = 'light yellow' # Background color
 fgColor = "#03224C" 
@@ -36,6 +43,12 @@ class Calibration(Frame):
         self.pack()
 	self.configure(bg=bgColor)
 	
+	# Les autres attributs
+	self.fig1 = plt.Figure()
+	self.fig2 = plt.Figure()
+	self.xdata_1, self.ydata_1 = [], []
+	
+
 	# Les différentes zone de l'interface initialisées au démarrage
 	self.init_interface()
 	
@@ -195,13 +208,27 @@ class Calibration(Frame):
 	self.frame20 = Frame(self.fenetre2,bg=bgColor) # sert à bien arranger les labels et les entry pn, sn ...
 	self.frame20.pack(pady=5)
 	# On crée les 2 canvas qui vont contenir les graphes
-	self.canvas1 = Canvas(self.frame20, width=320,heigh=200, bg="white", bd=0, highlightthickness=2)
+	self.canvas1 = Frame(self.frame20, width=320,heigh=200, bg="white",  bd=0, highlightthickness=2)
 	self.canvas1.grid(padx=2,pady=2,row=0,column=0)
-	self.canvas2 = Canvas(self.frame20, width=320,heigh=200, bg="white",  bd=0, highlightthickness=2)
+	self.canvas2 = Frame(self.frame20, width=320,heigh=200, bg="white",  bd=0, highlightthickness=2)
 	self.canvas2.grid(padx=2,pady=2,row=0,column=1)
-
+	self.graphe1 = classes.MonGraphe(fenetre_principale=self.canvas1)
+	self.graphe2 = classes.MonGraphe(fenetre_principale=self.canvas2)
+	
+	self.thread_conc = classes.CalibrationLog(self.Concentration)
+	self.thread_conc.start()
+    #####################
     def start_calib(self):
 	pass
+	
+    #################
+    def init(self):
+	self.ax.set_ylim(-1.1, 1.1)
+	self.ax.set_xlim(0, 10)
+	del self.xdata[:]
+	del self.ydata[:]
+	self.line.set_data(self.xdata, self.ydata)
+	return self.line,
     
 ##############################################################################
 

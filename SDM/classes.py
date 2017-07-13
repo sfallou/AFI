@@ -1,35 +1,139 @@
+# -*-coding:Utf-8 -*
+
+from tkMessageBox import *
 import Tkinter as tk
+import can
+import time                    ## Time-related library
+import threading               ## Threading-based Timer library
+import sys
+import os
 
-class ExampleApp(tk.Tk):
+
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+##############################################
+bgColor = 'light yellow' # Background color
+fgColor = "#03224C" 
+WinWidth = 400 # largeur fenetre
+WinHigh = 200 # hauteur fenetre
+titreFont = ('Helvetica', 14) # Police des Titres 
+fontSimple =('Helvetica', 12) # police des textes basiques
+entryLength = 10 # Taille des Entry
+buttonLength = 10 # Taille des boutons
+buttonColor = '#C0C0C0' # Couleur des boutons
+tailleBorder = 2 # borderwidth
+
+val = 0
+##############################################
+class Calcul(threading.Thread):
     def __init__(self):
-        tk.Tk.__init__(self)
-        t = SimpleTable(self, 10,2)
-        t.pack(side="top", fill="x")
-        t.set(0,0,"Hello, world")
+        threading.Thread.__init__(self)
+        
 
-class SimpleTable(tk.Frame):
-    def __init__(self, parent, rows=10, columns=2):
-        # use black background so it "peeks through" to 
-        # form grid lines
-        tk.Frame.__init__(self, parent, background="black")
-        self._widgets = []
-        for row in range(rows):
-            current_row = []
-            for column in range(columns):
-                label = tk.Label(self, text="%s/%s" % (row, column), 
-                                 borderwidth=0, width=10)
-                label.grid(row=row, column=column, sticky="nsew", padx=1, pady=1)
-                current_row.append(label)
-            self._widgets.append(current_row)
+    def run(self):
+        while 1:
+	    os.system('sudo /usr/local/bin/natinst/rpi/aiondemand -c 0 -s 500 -t 10000 -v > tmp.txt')
+	    file = open("tmp.txt","rb")
+	    resultat = file.readlines()[6:]
+	    resultat = [s.strip(',\n') for s in resultat]
+	    file.close()
+	    #print resultat
+	    dim = len(resultat)
+	    somme = 0
+	    for val in resultat:
+		somme += float(val)
+	    val = round(somme/dim,3)
+	    time.sleep(0.3)
+	    
+##############################################
+class CalibrationLog(threading.Thread):
+    def __init__(self,concen):
+        threading.Thread.__init__(self)
+        self.concentration = concen
+	
 
-        for column in range(columns):
-            self.grid_columnconfigure(column, weight=1)
+    def run(self):
+        while 1:
+	    os.system('sudo /usr/local/bin/natinst/rpi/aiondemand -c 0 -s 500 -t 10000 -v > tmp.txt')
+	    file = open("tmp.txt","rb")
+	    resultat = file.readlines()[6:]
+	    resultat = [s.strip(',\n') for s in resultat]
+	    file.close()
+	    #print resultat
+	    dim = len(resultat)
+	    somme = 0
+	    for val in resultat:
+		somme += float(val)
+	    self.concentration.delete(0,tk.END)
+	    time.sleep(0.3)
+	    self.concentration.insert(0,round(somme/dim,3))
+	    val = round(somme/dim,3)
+################################################
+class MonGraphe(tk.Frame):
+    def __init__(self,fenetre_principale=None):
+        tk.Frame.__init__(self)
+	self.fenP = fenetre_principale
+	#self.fenP.protocol("WM_DELETE_WINDOW", self.quit)
+        self.pack()
+	self.configure(bg=bgColor)
+	
+	self.fig = plt.Figure(figsize=(4, 3)) 
+	self.ax = self.fig.add_subplot(111)
+    
+	self.canvas = FigureCanvasTkAgg(self.fig, master=self.fenP)
+	self.canvas.get_tk_widget().grid(column=0,row=1)
+	
+	self.line, = self.ax.plot([], [], lw=1)
+	self.ax.grid()
+	self.xdata, self.ydata = [], []
+	self.ani = animation.FuncAnimation(self.fig, self.run, self.data_gen, blit=False, interval=10,
+                              repeat=False, init_func=self.init)
+	#self.calc = Calcul()
+	#self.calc.start()
+	
+    def data_gen(self,t=0):
+	cnt = 0
+	while cnt < 1000:
+	    cnt += 1
+	    t += 0.1
+	    
+	    yield t, np.sin(2*np.pi*t) * np.exp(-t/10.)
 
 
-    def set(self, row, column, value):
-        widget = self._widgets[row][column]
-        widget.configure(text=value)
+    def init(self):
+	self.ax.set_ylim(-1.1, 1.1)
+	self.ax.set_xlim(0, 10)
+	del self.xdata[:]
+	del self.ydata[:]
+	self.line.set_data(self.xdata, self.ydata)
+	return self.line,
 
+
+    def run(self,data):
+	# update the data
+	t, y = data
+	self.xdata.append(t)
+	self.ydata.append(y)
+	self.xmin, self.xmax = self.ax.get_xlim()
+
+	if t >= self.xmax:
+	    self.ax.set_xlim(self.xmin, 2*self.xmax)
+	    self.ax.figure.canvas.draw()
+	self.line.set_data(self.xdata, self.ydata)
+
+	return self.line,
+    
+
+#########################################################
 if __name__ == "__main__":
-    app = ExampleApp()
-    app.mainloop()
+    #app = ExampleApp()
+    #app.mainloop()
+    root = tk.Tk()
+    root.title("Calibration")
+    root.configure(bg=bgColor)
+    graphe = MonGraphe(fenetre_principale=root)
+    graphe.mainloop()
+    
