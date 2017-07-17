@@ -27,6 +27,64 @@ buttonColor = '#C0C0C0' # Couleur des boutons
 tailleBorder = 2 # borderwidth
 
 val = 0
+#####################################################
+class TerminalLog(threading.Thread):
+    def __init__(self,interface,terminal,leds):
+        threading.Thread.__init__(self)
+        self.interface = interface
+	self.terminal = terminal
+	self.leds = leds
+
+    def run(self):
+        can_interface = self.interface
+        bus = can.interface.Bus(can_interface, bustype='socketcan_ctypes')
+        while 1:
+            message = bus.recv()
+            if message is None:
+                break   
+            else :
+                print(message)
+                info = str(message)+"\n"
+		if info[36:44] == "00400103":
+		    self.terminal.insert('0.0', info)
+		    self.clignotant(info[65:67])
+                #file.write(info)
+        #file.close() 
+    
+    def clignotant(self, val):
+	val =  '{0:08b}'.format(int(val,16))[::-1]
+	if val[0] == '0':
+	    self.leds[0].create_oval(0,0,15,15, fill="grey")
+	if val[0] == '1':
+	    self.leds[0].create_oval(0,0,15,15, fill="green2")
+	if val[1] == '0':
+	    self.leds[1].create_oval(0,0,15,15, fill="grey")
+	if val[1] == '1':
+	    self.leds[1].create_oval(0,0,15,15, fill="green2")
+	if val[2] == '0':
+	    self.leds[2].create_oval(0,0,15,15, fill="grey")
+	if val[2] == '1':
+	    self.leds[2].create_oval(0,0,15,15, fill="green2")
+	if val[3] == '0':
+	    self.leds[3].create_oval(0,0,15,15, fill="grey")
+	if val[3] == '1':
+	    sel.leds[3].create_oval(0,0,15,15, fill="green2")
+	if val[4] == '0':
+	    self.leds[4].create_oval(0,0,15,15, fill="grey")
+	if val[4] == '1':
+	    self.leds[4].create_oval(0,0,15,15, fill="green2")
+	if val[5] == '0':
+	    self.leds[5].create_oval(0,0,15,15, fill="grey")
+	if val[5] == '1':
+	    self.leds[5].create_oval(0,0,15,15, fill="green2")
+	if val[6] == '0':
+	    self.leds[6].create_oval(0,0,15,15, fill="grey")
+	if val[6] == '1':
+	    self.leds[6].create_oval(0,0,15,15, fill="green2")
+	if val[7] == '0':
+	    self.leds[7].create_oval(0,0,15,15, fill="grey")
+	if val[7] == '1':
+	    self.leds[7].create_oval(0,0,15,15, fill="green2")
 ##############################################
 class Calcul(threading.Thread):
     def __init__(self):
@@ -69,8 +127,10 @@ class CalibrationLog(threading.Thread):
 		somme += float(val)
 	    self.concentration.delete(0,tk.END)
 	    time.sleep(0.3)
-	    self.concentration.insert(0,round(somme/dim,3))
-	    val = round(somme/dim,3)
+	    y = round(somme/dim,4)
+	    x = -(y-2.6815)/0.0257
+	    self.concentration.insert(0,round(x,4))
+	    
 ################################################
 class MonGraphe(tk.Frame):
     def __init__(self,fenetre_principale=None):

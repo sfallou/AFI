@@ -5,6 +5,7 @@ from PIL import ImageTk, Image
 from tkMessageBox import *
 import testReception as tR
 import configuration as conf
+import calibration as calib
 import autres as autr
 
 bgColor = 'light yellow' # Background color
@@ -26,7 +27,7 @@ class SDM(Tk):
         self.title('Smoke Detector Maintenance')
         self.resizable(0, 0)
         self.configure(bg=bgColor)
-	self.geometry("1170x630")
+	self.geometry("1170x700")
 	"""x = (self.winfo_screenwidth() - self.winfo_reqwidth())/50
 	y = (self.winfo_screenheight() - self.winfo_reqheight())/50
 	self.geometry("+%d+%d"%(x,y))
@@ -37,6 +38,7 @@ class SDM(Tk):
 	self.testReceptionPage = tR.TestReception(fenetre_principale=self)
 	self.testReceptionPage.pack()
 	self.configurationPage = conf.Configuration(fenetre_principale=self)
+	self.calibrationPage = calib.Calibration(fenetre_principale=self)
 	self.autrePage = autr.Autres(fenetre_principale=self)
 	
     def menu(self):
@@ -60,7 +62,7 @@ class SDM(Tk):
         self.test_menu.grid(padx=2,row=0,column=1)
 	self.config_menu = Button(self.FenetreMenu,text="Configuration",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColorMenu,command=self.configuration)
         self.config_menu.grid(padx=2,row=0,column=2)
-	self.calib_menu = Button(self.FenetreMenu,text="Calibration",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColorMenu,command=self.configuration)
+	self.calib_menu = Button(self.FenetreMenu,text="Calibration",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColorMenu,command=self.calibration)
         self.calib_menu.grid(padx=2,row=0,column=3)
 	self.pab_menu = Button(self.FenetreMenu,text="PAB",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColorMenu,command=self.configuration)
         self.pab_menu.grid(padx=2,row=0,column=4)
@@ -83,16 +85,19 @@ class SDM(Tk):
     def new(self):
 	self.testReceptionPage.destroy()
 	self.configurationPage.destroy()
+	self.calibrationPage.destroy()
 	self.autrePage.destroy()
 	
 	self.testReceptionPage = tR.TestReception(fenetre_principale=self)
 	self.testReceptionPage.pack()
 	self.configurationPage = conf.Configuration(fenetre_principale=self)
+	self.calibrationPage = conf.Calibration(fenetre_principale=self)
 	self.autrePage = autr.Autres(fenetre_principale=self)
     
     def cacher(self):
 	self.testReceptionPage.pack_forget()
 	self.configurationPage.pack_forget()
+	self.calibrationPage.pack_forget()
 	self.autrePage.pack_forget()
     
     def test_reception(self):
@@ -102,6 +107,10 @@ class SDM(Tk):
     def configuration(self):
 	self.cacher()
 	self.configurationPage.pack()
+	
+    def calibration(self):
+	self.cacher()
+	self.calibrationPage.pack()
     
     def autre(self):
 	self.cacher()

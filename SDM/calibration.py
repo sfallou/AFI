@@ -40,7 +40,7 @@ class Calibration(Frame):
 	self.fenP.protocol("WM_DELETE_WINDOW", self.quit)
 	# center window
 	#self.fenP.eval('tk::PlaceWindow %s center' % self.fenP.winfo_pathname(self.fenP.winfo_id()))
-        self.pack()
+        #self.pack()
 	self.configure(bg=bgColor)
 	
 	# Les autres attributs
@@ -74,7 +74,7 @@ class Calibration(Frame):
 	self.frame0.pack(pady=5)
 	self.labelConsigne = Label(self.frame0,text="Consignes", fg=fgColor, font=titreFont, bg=bgColor)
         self.labelConsigne.grid(row=0,column=0)
-	self.textConsigne = Text(self.frame0, height=20, width=50,font=("consolas",10))
+	self.textConsigne = Text(self.frame0, height=20, width=60,font=("consolas",10))
 	self.textConsigne.grid(row=1,column=0)
 	# le scrollbar 
 	self.scrollbar = Scrollbar(self.frame0, command=self.textConsigne.yview)
@@ -82,7 +82,7 @@ class Calibration(Frame):
 	self.textConsigne['yscrollcommand'] = self.scrollbar.set
 	
 	# 
-	self.boutonContinuer=Button(self.fenetre1,text="Continuer",bd=2, width=30, relief=RAISED, overrelief=RIDGE, bg=buttonColor, command=self.start_calib)
+	self.boutonContinuer=Button(self.fenetre1,text="Continuer",bd=2, width=30, relief=RAISED, overrelief=RIDGE, bg=buttonColor)
         self.boutonContinuer.pack(pady=5)
 	
 	###### Fêntre 1_ #########
@@ -168,6 +168,8 @@ class Calibration(Frame):
         self.Led0.grid(padx=2,pady=2, row=3 ,column=0)
 	Label(self.frame1_3,text="Babble", fg=fgColor, font=fontSimple, bg=bgColor).grid(padx=2,pady=2,row=3,column=1,sticky="nsew")
 	
+	# Je mets les LEDs dans une liste ordonnées pour les controler ensemble
+	self.Leds = [self.Led0,self.Led1,self.Led2,self.Led3,self.Led4,self.Led5,self.Led6,self.Led7]
 	# Bouton Charger qui permet d'ouvir la clé et de lire le contenu du smoke
 	self.boutonLoad=Button(self.fenetre2,text="CALIBRER",bd=2, width=50, relief=RAISED, overrelief=RIDGE, bg=buttonColor, command=self.start_calib)
         self.boutonLoad.pack(pady=5, side=TOP)
@@ -212,14 +214,40 @@ class Calibration(Frame):
 	self.canvas1.grid(padx=2,pady=2,row=0,column=0)
 	self.canvas2 = Frame(self.frame20, width=320,heigh=200, bg="white",  bd=0, highlightthickness=2)
 	self.canvas2.grid(padx=2,pady=2,row=0,column=1)
-	self.graphe1 = classes.MonGraphe(fenetre_principale=self.canvas1)
-	self.graphe2 = classes.MonGraphe(fenetre_principale=self.canvas2)
 	
-	self.thread_conc = classes.CalibrationLog(self.Concentration)
-	self.thread_conc.start()
+	
+    ########## On désactive les widgets avant le démarrage
+	self.disable_fenetre(self.fenetre2)
+	self.boutonContinuer.configure(state='disabled')
     #####################
     def start_calib(self):
-	pass
+	# On efface tout le contenu des fenêtres 
+	self.clean_interface()
+	# On affiche les consignes
+	try:
+	    #on ouvre consignes.txt et on l'affiche dans la zone de texte
+	    chemin = "./docs/Calibration/"
+	    consigne = open(os.path.join(chemin+"/consignes.txt"),"r")
+	    for line in consigne:
+		self.textConsigne.insert(INSERT, line)
+	except Exception as error:
+	    print(repr(error))
+	
+	# On réactive les widgets
+	self.boutonContinuer.configure(state='normal', command=self.continuer_calib)
+	self.enable_fenetre(self.fenetre2)
+     #####################
+    def continuer_calib(self):
+	# on établit la connexion avec la clé
+	res = self.open_dongle()
+	# Si res = 1, on lance le test et on affiche les trames CAN dans la zone logs ainsi que la progressBar
+	if res:
+	    log0 = classes.TerminalLog('ics0can0',self.textLogs,self.Leds)
+	    log0.start()
+	    self.graphe1 = classes.MonGraphe(fenetre_principale=self.canvas1)
+	    self.graphe2 = classes.MonGraphe(fenetre_principale=self.canvas2)
+	    self.thread_conc = classes.CalibrationLog(self.Concentration)
+	    self.thread_conc.start()
 	
     #################
     def init(self):
@@ -229,7 +257,62 @@ class Calibration(Frame):
 	del self.ydata[:]
 	self.line.set_data(self.xdata, self.ydata)
 	return self.line,
+    #######################################################
     
+    def disable_fenetre(self,widget,state='disabled'):
+	try:
+	    widget.configure(state=state)
+	except TclError:
+	    pass
+	for child in widget.winfo_children():
+	    self.disable_fenetre(child,state=state)
+     #######################################################
+    
+    def enable_fenetre(self,widget,state='normal'):
+	try:
+	    widget.configure(state=state)
+	except TclError:
+	    pass
+	for child in widget.winfo_children():
+	    self.disable_fenetre(child,state=state)
+    #######################################################
+    def clean_interface(self):
+	self.textLogs.delete('0.0',END)
+	self.textConsigne.delete('0.0',END)
+	"""self.canvas.create_oval(0,0,35,35, fill=self.couleurSignal2)
+	self.canvas2.create_oval(0,0,35,35, fill=self.couleurSignal2)
+	for child in self.entries:
+	    child.delete(0,END)
+	"""
+     #####################################################
+    def open_dongle(self):
+	#self.close_dongle() # au cas ou le processus etait toujours en vie
+	# On execute le processus setup
+	try:
+	    self.device = ics.find_devices()
+	    if self.device:
+		self.process1 = Popen(["sudo","./icsscand/icsscand","-D"], stdout=PIPE)
+		time.sleep(1)
+		self.process2 = Popen(["sudo","ifconfig","ics0can0","up"], stdout=PIPE)
+		return 1
+	    else:
+		showerror("No device Found","Veuillez brancher la clé VCAN !")
+		return 0
+	except:
+	    print ("impossible de se connecter")
+	    showerror("Erreur de communication","Impossible d'ouvrir la clé VCAN. Assurez vous qu'elle est bien branchée et relancer le logiciel")
+	return O
+    #######################################################
+    def close_dongle(self):
+	# On arrete le processus setup
+	try:
+	    os.system('sudo pkill icsscand')
+	except:
+	    print ("impossible de fermer")
+    ######################################################
+    def quit(self):
+	self.close_dongle()
+	self.fenP.destroy()
 ##############################################################################
 
 if __name__ == '__main__':
@@ -237,6 +320,6 @@ if __name__ == '__main__':
     root.title("Calibration")
     root.configure(bg=bgColor)
     calibration = Calibration(fenetre_principale=root)
-    calibration.mainloop()
+    #calibration.mainloop()
     
     
