@@ -26,14 +26,19 @@ buttonLength = 10 # Taille des boutons
 buttonColor = '#C0C0C0' # Couleur des boutons
 tailleBorder = 2 # borderwidth
 
-val = 0
 #####################################################
 class TerminalLog(threading.Thread):
-    def __init__(self,interface,terminal,leds):
+    def __init__(self,interface,terminal,leds,pots,top,bottom,smokeP,conc,widgets):
         threading.Thread.__init__(self)
         self.interface = interface
 	self.terminal = terminal
 	self.leds = leds
+	self.pots = pots
+	self.top = top
+	self.bottom = bottom
+	self.smokeP = smokeP
+	self.concen = conc
+	self.widgets = widgets
 
     def run(self):
         can_interface = self.interface
@@ -48,15 +53,34 @@ class TerminalLog(threading.Thread):
 		if info[36:44] == "00400103":
 		    self.terminal.insert('0.0', info)
 		    self.clignotant(info[65:67])
-                #file.write(info)
-        #file.close() 
-    
+		    self.parametres(info)
+		elif info[36:44] == "0611e103":
+		    for i in range(4):
+			self.pots[i].delete(0,tk.END)
+		    self.pots[0].insert(0,info[68:70])
+		    self.pots[1].insert(0,info[71:73])
+		    self.pots[2].insert(0,info[74:76])
+		    self.pots[3].insert(0,info[77:79])
+
+    def parametres(self,msg):
+	top = float(int(msg[77:82].replace(" ",""),16))/float(204)
+	bottom = float(int(msg[83:88].replace(" ",""),16))/float(204)
+	smokeP = top/bottom
+	self.top.delete(0,tk.END)
+	self.bottom.delete(0,tk.END)
+	self.smokeP.delete(0,tk.END)
+	self.top.insert(0,round(top,4))
+	self.bottom.insert(0,round(bottom,4))
+	self.smokeP.insert(0,round(smokeP,4))
+	
     def clignotant(self, val):
 	val =  '{0:08b}'.format(int(val,16))[::-1]
 	if val[0] == '0':
 	    self.leds[0].create_oval(0,0,15,15, fill="grey")
 	if val[0] == '1':
 	    self.leds[0].create_oval(0,0,15,15, fill="green2")
+	    self.widgets[3][1].configure(text=self.smokeP.get())
+	    self.widgets[3][2].configure(text=self.concen.get())
 	if val[1] == '0':
 	    self.leds[1].create_oval(0,0,15,15, fill="grey")
 	if val[1] == '1':
@@ -81,17 +105,29 @@ class TerminalLog(threading.Thread):
 	    self.leds[6].create_oval(0,0,15,15, fill="grey")
 	if val[6] == '1':
 	    self.leds[6].create_oval(0,0,15,15, fill="green2")
+	    self.widgets[3][1].configure(text=self.smokeP.get())
+	    #self.widgets[3][2].configure(text=self.smokeP.get())
+	
 	if val[7] == '0':
 	    self.leds[7].create_oval(0,0,15,15, fill="grey")
 	if val[7] == '1':
 	    self.leds[7].create_oval(0,0,15,15, fill="green2")
 ##############################################
-class Calcul(threading.Thread):
+"""class Calcul(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
         
 
     def run(self):
+	# on demande la valeur des potars
+	bus = can.interface.Bus()
+	msg = can.Message(arbitration_id=0x06103403,
+                      data=[0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+                      extended_id=True)
+	try:
+	    bus.send(msg)
+	except can.CanError:
+	    print("Message NOT sent")
         while 1:
 	    os.system('sudo /usr/local/bin/natinst/rpi/aiondemand -c 0 -s 500 -t 10000 -v > tmp.txt')
 	    file = open("tmp.txt","rb")
@@ -105,7 +141,7 @@ class Calcul(threading.Thread):
 		somme += float(val)
 	    val = round(somme/dim,3)
 	    time.sleep(0.3)
-	    
+"""	    
 ##############################################
 class CalibrationLog(threading.Thread):
     def __init__(self,concen):
@@ -114,6 +150,16 @@ class CalibrationLog(threading.Thread):
 	
 
     def run(self):
+	# on demande la valeur des potars
+	bus = can.interface.Bus()
+	msg = can.Message(arbitration_id=0x06103403,
+                      data=[0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+                      extended_id=True)
+	try:
+	    bus.send(msg)
+	except can.CanError:
+	    print("Message NOT sent")
+	    
         while 1:
 	    os.system('sudo /usr/local/bin/natinst/rpi/aiondemand -c 0 -s 500 -t 10000 -v > tmp.txt')
 	    file = open("tmp.txt","rb")
@@ -126,7 +172,7 @@ class CalibrationLog(threading.Thread):
 	    for val in resultat:
 		somme += float(val)
 	    self.concentration.delete(0,tk.END)
-	    time.sleep(0.3)
+	    time.sleep(0.5)
 	    y = round(somme/dim,4)
 	    x = -(y-2.6815)/0.0257
 	    self.concentration.insert(0,round(x,4))

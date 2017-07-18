@@ -67,14 +67,14 @@ class Calibration(Frame):
 	
 	# 
 	self.boutonStartCalib=Button(self.fenetre1,text="Démarrer la calibration",bd=2, width=50, relief=RAISED, overrelief=RIDGE, bg=buttonColor, command=self.start_calib)
-        self.boutonStartCalib.pack(pady=5)
+        self.boutonStartCalib.pack(pady=2)
 	
 	# Zone de Text pour les consignes à appliqué
 	self.frame0 = Frame(self.fenetre1,bg=bgColor) # sert à bien arranger les widgets de cette zone
 	self.frame0.pack(pady=5)
 	self.labelConsigne = Label(self.frame0,text="Consignes", fg=fgColor, font=titreFont, bg=bgColor)
         self.labelConsigne.grid(row=0,column=0)
-	self.textConsigne = Text(self.frame0, height=20, width=60,font=("consolas",10))
+	self.textConsigne = Text(self.frame0, height=25, width=60,font=("consolas",10))
 	self.textConsigne.grid(row=1,column=0)
 	# le scrollbar 
 	self.scrollbar = Scrollbar(self.frame0, command=self.textConsigne.yview)
@@ -170,9 +170,8 @@ class Calibration(Frame):
 	
 	# Je mets les LEDs dans une liste ordonnées pour les controler ensemble
 	self.Leds = [self.Led0,self.Led1,self.Led2,self.Led3,self.Led4,self.Led5,self.Led6,self.Led7]
-	# Bouton Charger qui permet d'ouvir la clé et de lire le contenu du smoke
-	self.boutonLoad=Button(self.fenetre2,text="CALIBRER",bd=2, width=50, relief=RAISED, overrelief=RIDGE, bg=buttonColor, command=self.start_calib)
-        self.boutonLoad.pack(pady=5, side=TOP)
+	
+	
 	
 	self.frame5 = Frame(self.fenetre2,bg=bgColor) # sert à bien arranger les labels et les entry pn, sn ...
 	self.frame5.pack(pady=5)
@@ -190,6 +189,8 @@ class Calibration(Frame):
 	Label(self.frame5,text="POT4", fg=fgColor, font=fontSimple, bg=bgColor).grid(padx=2,pady=2,row=0,column=3)
 	self.POT4=Entry(self.frame5, font=fontSimple, width=entryLength)
         self.POT4.grid(padx=2,pady=2, row=1 ,column=3)
+	# Je mets les POTs dans une liste ordonnées pour les controler ensemble
+	self.POTs = [self.POT1,self.POT2,self.POT3,self.POT4]
 	
 	#####
 	self.frame10 = Frame(self.fenetre2,bg=bgColor) # sert à bien arranger les labels et les entry pn, sn ...
@@ -215,6 +216,9 @@ class Calibration(Frame):
 	self.canvas2 = Frame(self.frame20, width=320,heigh=200, bg="white",  bd=0, highlightthickness=2)
 	self.canvas2.grid(padx=2,pady=2,row=0,column=1)
 	
+	# Bouton Charger qui permet d'ouvir la clé et de lire le contenu du smoke
+	self.boutonLoad=Button(self.fenetre2,text="CALIBRER",bd=2, width=60, relief=RAISED, overrelief=RIDGE, bg=buttonColor, command=self.start_calib)
+        self.boutonLoad.pack(pady=5, side=TOP)
 	
     ########## On désactive les widgets avant le démarrage
 	self.disable_fenetre(self.fenetre2)
@@ -242,7 +246,15 @@ class Calibration(Frame):
 	res = self.open_dongle()
 	# Si res = 1, on lance le test et on affiche les trames CAN dans la zone logs ainsi que la progressBar
 	if res:
-	    log0 = classes.TerminalLog('ics0can0',self.textLogs,self.Leds)
+	    log0 = classes.TerminalLog('ics0can0',
+			self.textLogs,
+			self.Leds,
+			self.POTs,
+			self.Top,
+			self.Bottom,
+			self.SmokeP,
+			self.Concentration,
+			self._widgets)
 	    log0.start()
 	    self.graphe1 = classes.MonGraphe(fenetre_principale=self.canvas1)
 	    self.graphe2 = classes.MonGraphe(fenetre_principale=self.canvas2)
@@ -313,6 +325,11 @@ class Calibration(Frame):
     def quit(self):
 	self.close_dongle()
 	self.fenP.destroy()
+	# On arrete le processus python
+	try:
+	    os.system('sudo pkill python')
+	except:
+	    print ("impossible d'arrêter python")
 ##############################################################################
 
 if __name__ == '__main__':
