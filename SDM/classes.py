@@ -26,9 +26,10 @@ buttonLength = 10 # Taille des boutons
 buttonColor = '#C0C0C0' # Couleur des boutons
 tailleBorder = 2 # borderwidth
 
+
 #####################################################
 class TerminalLog(threading.Thread):
-    def __init__(self,interface,terminal,leds,pots,top,bottom,smokeP,conc,widgets):
+    def __init__(self,interface,terminal,leds,pots,top,bottom,smokeP,concen,widgets):
         threading.Thread.__init__(self)
         self.interface = interface
 	self.terminal = terminal
@@ -37,13 +38,16 @@ class TerminalLog(threading.Thread):
 	self.top = top
 	self.bottom = bottom
 	self.smokeP = smokeP
-	self.concen = conc
+	self.concen = concen
+	self.listSmokeP = []
+	self.listConcen = []
 	self.widgets = widgets
 
     def run(self):
         can_interface = self.interface
         bus = can.interface.Bus(can_interface, bustype='socketcan_ctypes')
-        while 1:
+	self.flag = 1
+        while self.flag:
             message = bus.recv()
             if message is None:
                 break   
@@ -51,9 +55,10 @@ class TerminalLog(threading.Thread):
                 print(message)
                 info = str(message)+"\n"
 		if info[36:44] == "00400103":
-		    self.terminal.insert('0.0', info)
 		    self.clignotant(info[65:67])
 		    self.parametres(info)
+		    self.terminal.insert('0.0', info)
+		    
 		elif info[36:44] == "0611e103":
 		    for i in range(4):
 			self.pots[i].delete(0,tk.END)
@@ -79,8 +84,6 @@ class TerminalLog(threading.Thread):
 	    self.leds[0].create_oval(0,0,15,15, fill="grey")
 	if val[0] == '1':
 	    self.leds[0].create_oval(0,0,15,15, fill="green2")
-	    self.widgets[3][1].configure(text=self.smokeP.get())
-	    self.widgets[3][2].configure(text=self.concen.get())
 	if val[1] == '0':
 	    self.leds[1].create_oval(0,0,15,15, fill="grey")
 	if val[1] == '1':
@@ -97,21 +100,56 @@ class TerminalLog(threading.Thread):
 	    self.leds[4].create_oval(0,0,15,15, fill="grey")
 	if val[4] == '1':
 	    self.leds[4].create_oval(0,0,15,15, fill="green2")
+	    if len(self.listSmokeP) < 1:
+		# on récupere la concentration et la valeur du smoke P
+		self.listSmokeP.append(self.smokeP.get())
+		self.listConcen.append(self.concen.get())
+	    else:
+		pass
 	if val[5] == '0':
 	    self.leds[5].create_oval(0,0,15,15, fill="grey")
 	if val[5] == '1':
 	    self.leds[5].create_oval(0,0,15,15, fill="green2")
+	    if len(self.listSmokeP) < 2:
+		# on récupere la concentration et la valeur du smoke P
+		self.listSmokeP.append(self.smokeP.get())
+		self.listConcen.append(self.concen.get())
+	    else:
+		pass
 	if val[6] == '0':
 	    self.leds[6].create_oval(0,0,15,15, fill="grey")
 	if val[6] == '1':
 	    self.leds[6].create_oval(0,0,15,15, fill="green2")
-	    self.widgets[3][1].configure(text=self.smokeP.get())
-	    #self.widgets[3][2].configure(text=self.smokeP.get())
-	
+	    #self.flag = 0
+	    if len(self.listSmokeP) < 3:
+		# on récupere la concentration et la valeur du smoke P
+		self.listSmokeP.append(self.smokeP.get())
+		self.listConcen.append(self.concen.get())
+	    else:
+		pass
 	if val[7] == '0':
 	    self.leds[7].create_oval(0,0,15,15, fill="grey")
 	if val[7] == '1':
 	    self.leds[7].create_oval(0,0,15,15, fill="green2")
+	    if len(self.listSmokeP) < 4:
+		# on récupere la concentration et la valeur du smoke P
+		self.listSmokeP.append(self.smokeP.get())
+		self.listConcen.append(self.concen.get())
+		#self.flag = 0
+		self.widgets[1][1].configure(text=str(self.listSmokeP[0]))
+		self.widgets[2][1].configure(text=str(self.listSmokeP[1]))
+		self.widgets[3][1].configure(text=str(self.listSmokeP[2]))
+		self.widgets[4][1].configure(text=str(self.listSmokeP[3]))
+		
+		self.widgets[1][2].configure(text=str(self.listConcen[0]))
+		self.widgets[2][2].configure(text=str(self.listConcen[1]))
+		self.widgets[3][2].configure(text=str(self.listConcen[2]))
+		self.widgets[4][2].configure(text=str(self.listConcen[3]))
+	    else:
+		pass
+	print self.listSmokeP
+	print self.listConcen
+	
 ##############################################
 """class Calcul(threading.Thread):
     def __init__(self):
@@ -172,10 +210,10 @@ class CalibrationLog(threading.Thread):
 	    for val in resultat:
 		somme += float(val)
 	    self.concentration.delete(0,tk.END)
-	    time.sleep(0.5)
+	    #time.sleep(0.3)
 	    y = round(somme/dim,4)
 	    x = -(y-2.6815)/0.0257
-	    self.concentration.insert(0,round(x,4))
+	    self.concentration.insert(0,round(x,1))
 	    
 ################################################
 class MonGraphe(tk.Frame):

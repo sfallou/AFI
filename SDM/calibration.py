@@ -256,11 +256,12 @@ class Calibration(Frame):
 			self.Concentration,
 			self._widgets)
 	    log0.start()
-	    self.graphe1 = classes.MonGraphe(fenetre_principale=self.canvas1)
-	    self.graphe2 = classes.MonGraphe(fenetre_principale=self.canvas2)
+	    #self.graphe1 = classes.MonGraphe(fenetre_principale=self.canvas1)
+	    #self.graphe2 = classes.MonGraphe(fenetre_principale=self.canvas2)
 	    self.thread_conc = classes.CalibrationLog(self.Concentration)
 	    self.thread_conc.start()
-	
+	### On désactive le bouton
+	self.boutonContinuer.configure(state='disabled')
     #################
     def init(self):
 	self.ax.set_ylim(-1.1, 1.1)
