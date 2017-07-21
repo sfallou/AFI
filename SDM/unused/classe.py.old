@@ -42,6 +42,8 @@ class TerminalLog(threading.Thread):
 	self.listSmokeP = []
 	self.listConcen = []
 	self.widgets = widgets
+	
+	
 
     def run(self):
         can_interface = self.interface
@@ -150,42 +152,26 @@ class TerminalLog(threading.Thread):
 	print self.listSmokeP
 	print self.listConcen
 	
-##############################################
-"""class Calcul(threading.Thread):
-    def __init__(self):
-        threading.Thread.__init__(self)
-        
-
-    def run(self):
-	# on demande la valeur des potars
-	bus = can.interface.Bus()
-	msg = can.Message(arbitration_id=0x06103403,
-                      data=[0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
-                      extended_id=True)
-	try:
-	    bus.send(msg)
-	except can.CanError:
-	    print("Message NOT sent")
-        while 1:
-	    os.system('sudo /usr/local/bin/natinst/rpi/aiondemand -c 0 -s 500 -t 10000 -v > tmp.txt')
-	    file = open("tmp.txt","rb")
-	    resultat = file.readlines()[6:]
-	    resultat = [s.strip(',\n') for s in resultat]
-	    file.close()
-	    #print resultat
-	    dim = len(resultat)
-	    somme = 0
-	    for val in resultat:
-		somme += float(val)
-	    val = round(somme/dim,3)
-	    time.sleep(0.3)
-"""	    
+    
 ##############################################
 class CalibrationLog(threading.Thread):
-    def __init__(self,concen):
+    def __init__(self,concen,frame1):
         threading.Thread.__init__(self)
         self.concentration = concen
+	self.frame1 = frame1
+	######################
+	self.frame1 = plt.Figure(figsize=(4, 3)) 
+	self.ax = self.frame1.add_subplot(111)
+    
+	self.canvas = FigureCanvasTkAgg(self.frame1, master=self.fenP)
+	self.canvas.get_tk_widget().grid(column=0,row=1)
 	
+	self.line, = self.ax.plot([], [], lw=1)
+	self.ax.grid()
+	self.xdata, self.ydata = [], []
+	self.ani = animation.FuncAnimation(self.frame1, self.anim, self.data_gen, blit=False, interval=10,
+                              repeat=False, init_func=self.init)
+	######
 
     def run(self):
 	# on demande la valeur des potars
@@ -199,30 +185,50 @@ class CalibrationLog(threading.Thread):
 	    print("Message NOT sent")
 	    
         while 1:
-	    """os.system('sudo /usr/local/bin/natinst/rpi/aiondemand -c 0 -s 500 -t 10000 -v > tmp.txt')
-	    file = open("tmp.txt","rb")
-	    resultat = file.readlines()[6:]
-	    resultat = [s.strip(',\n') for s in resultat]
-	    file.close()
-	    #print resultat
-	    dim = len(resultat)
-	    somme = 0
-	    for val in resultat:
-		somme += float(val)
-	    self.concentration.delete(0,tk.END)
-	    #time.sleep(0.3)
-	    y = round(somme/dim,4)
-	    x = -(y-2.6815)/0.0257
-	    """
 	    os.system('sudo /usr/local/bin/natinst/rpi/aiondemand -c 0 -s 1 -t 1 -v > tmp.txt')
 	    file = open("tmp.txt","rb")
 	    resultat = float(file.readlines()[-1].replace(",",""))
 	    file.close()
 	    self.concentration.delete(0,tk.END)
+	    #time.sleep(0.3)
 	    y = round(resultat,4)
 	    x = -(y-2.6815)/0.0257
 	    self.concentration.insert(0,round(x,1))
+    def data_gen(self,t=0):
+	cnt = 0
+	while cnt < 1000:
+	    cnt += 1
+	    t += 0.1
+	    os.system('sudo /usr/local/bin/natinst/rpi/aiondemand -c 0 -s 1 -t 1 -v > tmp.txt')
+	    file = open("tmp.txt","rb")
+	    resultat = float(file.readlines()[-1].replace(",",""))
+	    file.close()
+	    y = round(resultat,4)
+	    x = -(y-2.6815)/0.0257
+	    yield t, x
 	    
+    def init(self):
+	self.ax.set_ylim(-1.1, 1.1)
+	self.ax.set_xlim(0, 10)
+	del self.xdata[:]
+	del self.ydata[:]
+	self.line.set_data(self.xdata, self.ydata)
+	return self.line,
+
+
+    def anime(self,data):
+	# update the data
+	t, y = data
+	self.xdata.append(t)
+	self.ydata.append(y)
+	self.xmin, self.xmax = self.ax.get_xlim()
+
+	if t >= self.xmax:
+	    self.ax.set_xlim(self.xmin, 2*self.xmax)
+	    self.ax.figure.canvas.draw()
+	self.line.set_data(self.xdata, self.ydata)
+
+	return self.line,
 ################################################
 class MonGraphe(tk.Frame):
     def __init__(self,fenetre_principale=None):

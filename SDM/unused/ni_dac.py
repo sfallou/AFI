@@ -12,7 +12,7 @@ import time
 
 def mean(fichier):
     file = open(fichier,"rb")
-    resultat = file.readlines()[6:]
+    resultat = file.readlines()[6:505]
     resultat = [s.strip(',\n') for s in resultat]
     file.close()
     print resultat
@@ -25,11 +25,13 @@ def mean(fichier):
 def mesure():
 	try:
 	    os.system('sudo /usr/local/bin/natinst/rpi/aiondemand -c 0 -s 500 -t 10000 -v > tmp.txt')
+	    mean("tmp.txt")
 	except:
 	    print ("impossible")
 
+
+
 while 1:
     mesure()
-    mean("tmp.txt")
-    time.sleep(0.2)
-    
+    #mean("tmp.txt")
+    time.sleep(0.5)  
