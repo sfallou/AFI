@@ -211,9 +211,9 @@ class Calibration(Frame):
 	self.frame20 = Frame(self.fenetre2,bg=bgColor) # sert à bien arranger les labels et les entry pn, sn ...
 	self.frame20.pack(pady=5)
 	# On crée les 2 canvas qui vont contenir les graphes
-	self.canvas1 = Frame(self.frame20, width=320,heigh=200, bg="white",  bd=0, highlightthickness=2)
+	self.canvas1 = Frame(self.frame20, width=370,heigh=250, bg="white",  bd=0, highlightthickness=2)
 	self.canvas1.grid(padx=2,pady=2,row=0,column=0)
-	self.canvas2 = Frame(self.frame20, width=320,heigh=200, bg="white",  bd=0, highlightthickness=2)
+	self.canvas2 = Frame(self.frame20, width=370,heigh=250, bg="white",  bd=0, highlightthickness=2)
 	self.canvas2.grid(padx=2,pady=2,row=0,column=1)
 	
 	# Bouton Charger qui permet d'ouvir la clé et de lire le contenu du smoke
@@ -256,10 +256,10 @@ class Calibration(Frame):
 			self.Concentration,
 			self._widgets)
 	    log0.start()
-	    #self.graphe1 = classes.MonGraphe(fenetre_principale=self.canvas1)
-	    #self.graphe2 = classes.MonGraphe(fenetre_principale=self.canvas2)
 	    self.thread_conc = classes.CalibrationLog(self.Concentration)
 	    self.thread_conc.start()
+	    self.graphe1 = classes.MonGraphe(fenetre_principale=self.canvas1)
+	    #self.graphe2 = classes.MonGraphe(fenetre_principale=self.canvas2)
 	### On désactive le bouton
 	self.boutonContinuer.configure(state='disabled')
     #################

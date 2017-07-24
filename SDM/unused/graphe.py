@@ -34,8 +34,8 @@ def mesure():
 	    
 def data_gen(t=0):
     cnt = 0
-    while cnt < 1000:
-        cnt += 1
+    while 1:
+        
         t += 0.1
 	os.system('sudo /usr/local/bin/natinst/rpi/aiondemand -c 0 -s 1 -t 1 -v > tmp.txt')
 	file = open("tmp.txt","rb")

@@ -51,7 +51,7 @@ class MonGraphe(tk.Frame):
 	self.line, = self.ax.plot([], [], lw=1)
 	self.ax.grid()
 	self.xdata, self.ydata = [], []
-	self.ani = animation.FuncAnimation(self.fig, self.run, self.data_gen, blit=False, interval=10,
+	self.ani = animation.FuncAnimation(self.fig, self.animate, self.data_gen, blit=False, interval=10,
                               repeat=False, init_func=self.init)
 	#self.calc = Calcul()
 	#self.calc.start()
@@ -83,7 +83,7 @@ class MonGraphe(tk.Frame):
 	return self.line,
 
 
-    def run(self,data):
+    def animate(self,data):
 	# update the data
 	t, y = data
 	self.xdata.append(t)

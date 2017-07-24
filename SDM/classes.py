@@ -150,36 +150,7 @@ class TerminalLog(threading.Thread):
 	print self.listSmokeP
 	print self.listConcen
 	
-##############################################
-"""class Calcul(threading.Thread):
-    def __init__(self):
-        threading.Thread.__init__(self)
-        
 
-    def run(self):
-	# on demande la valeur des potars
-	bus = can.interface.Bus()
-	msg = can.Message(arbitration_id=0x06103403,
-                      data=[0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
-                      extended_id=True)
-	try:
-	    bus.send(msg)
-	except can.CanError:
-	    print("Message NOT sent")
-        while 1:
-	    os.system('sudo /usr/local/bin/natinst/rpi/aiondemand -c 0 -s 500 -t 10000 -v > tmp.txt')
-	    file = open("tmp.txt","rb")
-	    resultat = file.readlines()[6:]
-	    resultat = [s.strip(',\n') for s in resultat]
-	    file.close()
-	    #print resultat
-	    dim = len(resultat)
-	    somme = 0
-	    for val in resultat:
-		somme += float(val)
-	    val = round(somme/dim,3)
-	    time.sleep(0.3)
-"""	    
 ##############################################
 class CalibrationLog(threading.Thread):
     def __init__(self,concen):
@@ -199,22 +170,7 @@ class CalibrationLog(threading.Thread):
 	    print("Message NOT sent")
 	    
         while 1:
-	    """os.system('sudo /usr/local/bin/natinst/rpi/aiondemand -c 0 -s 500 -t 10000 -v > tmp.txt')
-	    file = open("tmp.txt","rb")
-	    resultat = file.readlines()[6:]
-	    resultat = [s.strip(',\n') for s in resultat]
-	    file.close()
-	    #print resultat
-	    dim = len(resultat)
-	    somme = 0
-	    for val in resultat:
-		somme += float(val)
-	    self.concentration.delete(0,tk.END)
-	    #time.sleep(0.3)
-	    y = round(somme/dim,4)
-	    x = -(y-2.6815)/0.0257
-	    """
-	    os.system('sudo /usr/local/bin/natinst/rpi/aiondemand -c 0 -s 1 -t 1 -v > tmp.txt')
+	    os.system('sudo /usr/local/bin/natinst/rpi/aiondemand -c 0 -s 1 -t 1 -v | tee tmp.txt tmp2.txt')
 	    file = open("tmp.txt","rb")
 	    resultat = float(file.readlines()[-1].replace(",",""))
 	    file.close()
@@ -236,27 +192,36 @@ class MonGraphe(tk.Frame):
 	self.ax = self.fig.add_subplot(111)
     
 	self.canvas = FigureCanvasTkAgg(self.fig, master=self.fenP)
-	self.canvas.get_tk_widget().grid(column=0,row=1)
+	self.canvas.get_tk_widget().pack()
 	
 	self.line, = self.ax.plot([], [], lw=1)
 	self.ax.grid()
+	self.ax.legend(["Concentration"], loc="best", frameon=False, labelspacing=0)
 	self.xdata, self.ydata = [], []
 	self.ani = animation.FuncAnimation(self.fig, self.run, self.data_gen, blit=False, interval=10,
                               repeat=False, init_func=self.init)
-	#self.calc = Calcul()
-	#self.calc.start()
-	
+
     def data_gen(self,t=0):
-	cnt = 0
-	while cnt < 1000:
-	    cnt += 1
-	    t += 0.1
+	
+	while 1:
 	    
-	    yield t, np.sin(2*np.pi*t) * np.exp(-t/10.)
+	    t += 0.1
+	    try:
+		file = open("tmp2.txt","rb")
+		resultat = float(file.readlines()[-1].replace(",",""))
+		file.close()
+		y = round(resultat,4)
+		x = -(y-2.6815)/0.0257
+		yield t, x
+	    except:
+		pass
+	    
+	    
+	   
 
 
     def init(self):
-	self.ax.set_ylim(-1.1, 1.1)
+	self.ax.set_ylim(-1, 3)
 	self.ax.set_xlim(0, 10)
 	del self.xdata[:]
 	del self.ydata[:]
@@ -270,15 +235,18 @@ class MonGraphe(tk.Frame):
 	self.xdata.append(t)
 	self.ydata.append(y)
 	self.xmin, self.xmax = self.ax.get_xlim()
+	self.ymin, self.ymax = self.ax.get_ylim()
 
 	if t >= self.xmax:
 	    self.ax.set_xlim(self.xmin, 2*self.xmax)
+	    self.ax.figure.canvas.draw()
+	if y >= self.ymax:
+	    self.ax.set_ylim(self.ymin, 2*self.ymax)
 	    self.ax.figure.canvas.draw()
 	self.line.set_data(self.xdata, self.ydata)
 
 	return self.line,
     
-
 #########################################################
 if __name__ == "__main__":
     #app = ExampleApp()
@@ -286,6 +254,6 @@ if __name__ == "__main__":
     root = tk.Tk()
     root.title("Calibration")
     root.configure(bg=bgColor)
-    graphe = MonGraphe(fenetre_principale=root)
-    graphe.mainloop()
+    #graphe = MonGraphe(fenetre_principale=root)
+    #graphe.mainloop()
     
