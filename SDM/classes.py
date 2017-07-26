@@ -26,7 +26,9 @@ buttonLength = 10 # Taille des boutons
 buttonColor = '#C0C0C0' # Couleur des boutons
 tailleBorder = 2 # borderwidth
 
-
+valeurTop = 0
+valeurSmokeP = 0
+valeurConcentration = 0
 #####################################################
 class TerminalLog(threading.Thread):
     def __init__(self,interface,terminal,leds,pots,top,bottom,smokeP,concen,widgets):
@@ -47,11 +49,12 @@ class TerminalLog(threading.Thread):
         can_interface = self.interface
         bus = can.interface.Bus(can_interface, bustype='socketcan_ctypes')
 	self.flag = 1
+	
         while self.flag:
             message = bus.recv()
             if message is None:
                 break   
-            else :
+            else :		
                 print(message)
                 info = str(message)+"\n"
 		if info[36:44] == "00400103":
@@ -77,6 +80,9 @@ class TerminalLog(threading.Thread):
 	self.top.insert(0,round(top,4))
 	self.bottom.insert(0,round(bottom,4))
 	self.smokeP.insert(0,round(smokeP,4))
+	fic = open("params.txt","w")
+	fic.write(str(top)+"\n"+str(bottom))
+	fic.close()
 	
     def clignotant(self, val):
 	val =  '{0:08b}'.format(int(val,16))[::-1]
@@ -104,6 +110,8 @@ class TerminalLog(threading.Thread):
 		# on récupere la concentration et la valeur du smoke P
 		self.listSmokeP.append(self.smokeP.get())
 		self.listConcen.append(self.concen.get())
+		self.widgets[1][1].configure(text=str(self.listSmokeP[0]))
+		self.widgets[1][2].configure(text=str(self.listConcen[0]))
 	    else:
 		pass
 	if val[5] == '0':
@@ -114,6 +122,8 @@ class TerminalLog(threading.Thread):
 		# on récupere la concentration et la valeur du smoke P
 		self.listSmokeP.append(self.smokeP.get())
 		self.listConcen.append(self.concen.get())
+		self.widgets[2][1].configure(text=str(self.listSmokeP[1]))
+		self.widgets[2][2].configure(text=str(self.listConcen[1]))
 	    else:
 		pass
 	if val[6] == '0':
@@ -125,6 +135,9 @@ class TerminalLog(threading.Thread):
 		# on récupere la concentration et la valeur du smoke P
 		self.listSmokeP.append(self.smokeP.get())
 		self.listConcen.append(self.concen.get())
+		self.widgets[3][1].configure(text=str(self.listSmokeP[2]))
+		self.widgets[3][2].configure(text=str(self.listConcen[2]))
+		
 	    else:
 		pass
 	if val[7] == '0':
@@ -136,20 +149,15 @@ class TerminalLog(threading.Thread):
 		self.listSmokeP.append(self.smokeP.get())
 		self.listConcen.append(self.concen.get())
 		#self.flag = 0
-		self.widgets[1][1].configure(text=str(self.listSmokeP[0]))
-		self.widgets[2][1].configure(text=str(self.listSmokeP[1]))
-		self.widgets[3][1].configure(text=str(self.listSmokeP[2]))
 		self.widgets[4][1].configure(text=str(self.listSmokeP[3]))
-		
-		self.widgets[1][2].configure(text=str(self.listConcen[0]))
-		self.widgets[2][2].configure(text=str(self.listConcen[1]))
-		self.widgets[3][2].configure(text=str(self.listConcen[2]))
 		self.widgets[4][2].configure(text=str(self.listConcen[3]))
 	    else:
 		pass
 	print self.listSmokeP
 	print self.listConcen
 	
+    def stop(self):
+	self.flag = 0
 
 ##############################################
 class CalibrationLog(threading.Thread):
@@ -159,6 +167,7 @@ class CalibrationLog(threading.Thread):
 	
 
     def run(self):
+	self.flag = 1
 	# on demande la valeur des potars
 	bus = can.interface.Bus()
 	msg = can.Message(arbitration_id=0x06103403,
@@ -169,8 +178,9 @@ class CalibrationLog(threading.Thread):
 	except can.CanError:
 	    print("Message NOT sent")
 	    
-        while 1:
-	    os.system('sudo /usr/local/bin/natinst/rpi/aiondemand -c 0 -s 1 -t 1 -v | tee tmp.txt tmp2.txt')
+        while self.flag:
+	    #os.system('sudo /usr/local/bin/natinst/rpi/aiondemand -c 0 -s 1 -t 1 -v | tee tmp.txt tmp2.txt')
+	    os.system('sudo /usr/local/bin/natinst/rpi/aiondemand -c 0 -s 1 -t 1 -v | tee tmp.txt > tmp2.txt')
 	    file = open("tmp.txt","rb")
 	    resultat = float(file.readlines()[-1].replace(",",""))
 	    file.close()
@@ -179,40 +189,41 @@ class CalibrationLog(threading.Thread):
 	    x = -(y-2.6815)/0.0257
 	    self.concentration.insert(0,round(x,1))
 	    
+    def stop(self):
+	self.flag = 0
 ################################################
-class MonGraphe(tk.Frame):
-    def __init__(self,fenetre_principale=None):
+class MonGraphe2(tk.Frame):
+    def __init__(self,smkP,conc,fenetre_principale=None):
         tk.Frame.__init__(self)
 	self.fenP = fenetre_principale
-	#self.fenP.protocol("WM_DELETE_WINDOW", self.quit)
-        self.pack()
+	self.fenSmokeP = smkP
+	self.fenConc = conc
 	self.configure(bg=bgColor)
 	
-	self.fig = plt.Figure(figsize=(4, 3)) 
+	self.fig = plt.Figure(figsize=(7, 3)) 
 	self.ax = self.fig.add_subplot(111)
     
 	self.canvas = FigureCanvasTkAgg(self.fig, master=self.fenP)
 	self.canvas.get_tk_widget().pack()
 	
-	self.line, = self.ax.plot([], [], lw=1)
+	self.lineSmoke, = self.ax.plot([], [], 'r', lw=1)
+	self.lineConc, = self.ax.plot([], [], 'b', lw=1)
 	self.ax.grid()
-	self.ax.legend(["Concentration"], loc="best", frameon=False, labelspacing=0)
-	self.xdata, self.ydata = [], []
+	self.ax.legend(["Concen","SmokeP"], loc="best", frameon=False, labelspacing=0)
+	self.xdata, self.ydata, self.concData = [], [], []
 	self.ani = animation.FuncAnimation(self.fig, self.run, self.data_gen, blit=False, interval=10,
                               repeat=False, init_func=self.init)
 
     def data_gen(self,t=0):
-	
+	global valeurSmokeP, valeurConcentration
 	while 1:
-	    
 	    t += 0.1
 	    try:
-		file = open("tmp2.txt","rb")
-		resultat = float(file.readlines()[-1].replace(",",""))
-		file.close()
-		y = round(resultat,4)
-		x = -(y-2.6815)/0.0257
-		yield t, x
+		if self.fenSmokeP.get():
+		    valeurSmokeP = float(self.fenSmokeP.get())
+		if self.fenConc.get():
+		    valeurConcentration = float(self.fenConc.get())
+		yield t, valeurConcentration, valeurSmokeP 
 	    except:
 		pass
 	    
@@ -221,19 +232,22 @@ class MonGraphe(tk.Frame):
 
 
     def init(self):
-	self.ax.set_ylim(-1, 3)
+	self.ax.set_ylim(-1, 12)
 	self.ax.set_xlim(0, 10)
 	del self.xdata[:]
 	del self.ydata[:]
-	self.line.set_data(self.xdata, self.ydata)
-	return self.line,
+	del self.concData[:]
+	self.lineSmoke.set_data(self.xdata, self.ydata)
+	self.lineConc.set_data(self.xdata, self.concData)
+	return self.lineSmoke,self.lineConc,
 
 
     def run(self,data):
 	# update the data
-	t, y = data
+	t, y, conc = data
 	self.xdata.append(t)
 	self.ydata.append(y)
+	self.concData.append(conc)
 	self.xmin, self.xmax = self.ax.get_xlim()
 	self.ymin, self.ymax = self.ax.get_ylim()
 
@@ -243,10 +257,29 @@ class MonGraphe(tk.Frame):
 	if y >= self.ymax:
 	    self.ax.set_ylim(self.ymin, 2*self.ymax)
 	    self.ax.figure.canvas.draw()
-	self.line.set_data(self.xdata, self.ydata)
+	if self.ymax >= 100 and y <= 20:
+	    self.ax.set_ylim(self.ymin, 20)
+	    self.ax.figure.canvas.draw()
+	self.lineSmoke.set_data(self.xdata, self.ydata)
+	self.lineConc.set_data(self.xdata, self.concData)
+	
 
-	return self.line,
-    
+
+	return self.lineSmoke,self.lineConc,
+###################################################
+class HornCancel(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+       
+    def run(self):
+	msg = can.Message(arbitration_id=0x06103403,
+                      data=[0x16, 0x00, 0x00, 0x00, 0xff, 0x7f, 0x00, 0x00],
+                      extended_id=True)
+	try:
+	    bus.send(msg)
+	except can.CanError:
+	    print("Message NOT sent")
+
 #########################################################
 if __name__ == "__main__":
     #app = ExampleApp()

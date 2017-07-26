@@ -28,6 +28,7 @@ class SDM(Tk):
         self.resizable(0, 0)
         self.configure(bg=bgColor)
 	self.geometry("1170x700")
+	self.protocol("WM_DELETE_WINDOW", self.quit)
 	"""x = (self.winfo_screenwidth() - self.winfo_reqwidth())/50
 	y = (self.winfo_screenheight() - self.winfo_reqheight())/50
 	self.geometry("+%d+%d"%(x,y))
@@ -117,7 +118,14 @@ class SDM(Tk):
 	self.autrePage.pack()
     def rien(self):
 	pass
-	
+    
+     ######################################################
+    def quit(self):
+	# On arrete le processus python
+	try:
+	    os.system('sudo pkill python')
+	except:
+	    print ("impossible d'arrêter python")
 
 ##############################################################################
 

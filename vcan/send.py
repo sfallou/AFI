@@ -6,7 +6,7 @@ import time
 def send_one():
     bus = can.interface.Bus()
     msg = can.Message(arbitration_id=0x06103403,
-                      data=[0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+                      data=[0x16, 0x00, 0x00, 0x00, 0xff, 0x7f, 0x00, 0x00],
                       extended_id=True)
     try:
         bus.send(msg)
@@ -17,7 +17,7 @@ def send_one():
 
       
 if __name__ == "__main__":
-    send_one() # permet d'avoir le numéro de série et le PN
+    send_one() 
     
 
 

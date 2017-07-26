@@ -5,6 +5,7 @@ from tkMessageBox import *
 import ttk
 import tkFileDialog
 import ics
+import can
 from read_nvm import *
 from subprocess import Popen, PIPE
 import os
@@ -204,20 +205,22 @@ class Calibration(Frame):
 	self.scrollb = Scrollbar(self.frame10, command=self.textLogs.yview)
 	self.scrollb.grid(row=1,column=1,sticky="nsew")
 	self.textLogs['yscrollcommand'] = self.scrollb.set
-	# La barre de progression
-	self.progressBar = ttk.Progressbar(self.frame10,orient="horizontal",length=500,mode="determinate")
-	self.progressBar.grid(pady=2,row=3,column=0)
+	# Le bouton "horn cancel"
+	self.boutonHorn=Button(self.frame10,text="Horn Cancel",bd=2, width=20, relief=RAISED, overrelief=RIDGE, bg=buttonColor, command=self.horn_cancel)
+        self.boutonHorn.grid(pady=2,row=3,column=0)
+	
 	
 	self.frame20 = Frame(self.fenetre2,bg=bgColor) # sert à bien arranger les labels et les entry pn, sn ...
 	self.frame20.pack(pady=5)
 	# On crée les 2 canvas qui vont contenir les graphes
-	self.canvas1 = Frame(self.frame20, width=370,heigh=250, bg="white",  bd=0, highlightthickness=2)
-	self.canvas1.grid(padx=2,pady=2,row=0,column=0)
-	self.canvas2 = Frame(self.frame20, width=370,heigh=250, bg="white",  bd=0, highlightthickness=2)
-	self.canvas2.grid(padx=2,pady=2,row=0,column=1)
+	self.canvas1 = Frame(self.frame20, width=630,heigh=250, bg="white",  bd=0, highlightthickness=2)
+	self.canvas1.pack()
+	#self.canvas1.grid(padx=2,pady=2,row=0,column=0)
+	#self.canvas2 = Frame(self.frame20, width=370,heigh=250, bg="white",  bd=0, highlightthickness=2)
+	#self.canvas2.grid(padx=2,pady=2,row=0,column=1)
 	
 	# Bouton Charger qui permet d'ouvir la clé et de lire le contenu du smoke
-	self.boutonLoad=Button(self.fenetre2,text="CALIBRER",bd=2, width=60, relief=RAISED, overrelief=RIDGE, bg=buttonColor, command=self.start_calib)
+	self.boutonLoad=Button(self.fenetre2,text="CALIBRER",bd=2, width=60, relief=RAISED, overrelief=RIDGE, bg=buttonColor)
         self.boutonLoad.pack(pady=5, side=TOP)
 	
     ########## On désactive les widgets avant le démarrage
@@ -240,13 +243,14 @@ class Calibration(Frame):
 	# On réactive les widgets
 	self.boutonContinuer.configure(state='normal', command=self.continuer_calib)
 	self.enable_fenetre(self.fenetre2)
+	# On desactive le bout
      #####################
     def continuer_calib(self):
 	# on établit la connexion avec la clé
 	res = self.open_dongle()
 	# Si res = 1, on lance le test et on affiche les trames CAN dans la zone logs ainsi que la progressBar
 	if res:
-	    log0 = classes.TerminalLog('ics0can0',
+	    self.log0 = classes.TerminalLog('ics0can0',
 			self.textLogs,
 			self.Leds,
 			self.POTs,
@@ -255,22 +259,28 @@ class Calibration(Frame):
 			self.SmokeP,
 			self.Concentration,
 			self._widgets)
-	    log0.start()
+	    self.log0.start()
 	    self.thread_conc = classes.CalibrationLog(self.Concentration)
 	    self.thread_conc.start()
-	    self.graphe1 = classes.MonGraphe(fenetre_principale=self.canvas1)
-	    #self.graphe2 = classes.MonGraphe(fenetre_principale=self.canvas2)
+	    #self.graphe1 = classes.MonGraphe(self.Top,fenetre_principale=self.canvas1)
+	    self.graphe2 = classes.MonGraphe2(self.SmokeP,self.Concentration,fenetre_principale=self.canvas1)
+	    #self.graphe = classes.MonGraphe3(self.SmokeP,self.Top,fenetre_principale=self.canvas2)
 	### On désactive le bouton
 	self.boutonContinuer.configure(state='disabled')
+   
     #################
-    def init(self):
-	self.ax.set_ylim(-1.1, 1.1)
-	self.ax.set_xlim(0, 10)
-	del self.xdata[:]
-	del self.ydata[:]
-	self.line.set_data(self.xdata, self.ydata)
-	return self.line,
+    def horn_cancel(self):
+	bus = can.interface.Bus()
+	msg = can.Message(arbitration_id=0x06103403,
+                      data=[0x16, 0x00, 0x00, 0x00, 0xff, 0x7f, 0x00, 0x00],
+                      extended_id=True)
+	try:
+	    bus.send(msg)
+	except can.CanError:
+	    print("Message NOT sent")
+	
     #######################################################
+    
     
     def disable_fenetre(self,widget,state='disabled'):
 	try:
@@ -317,6 +327,8 @@ class Calibration(Frame):
 	return O
     #######################################################
     def close_dongle(self):
+	self.log0.stop()
+	self.thread_conc.stop()
 	# On arrete le processus setup
 	try:
 	    os.system('sudo pkill icsscand')

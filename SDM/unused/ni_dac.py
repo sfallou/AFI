@@ -34,4 +34,4 @@ def mesure():
 while 1:
     mesure()
     #mean("tmp.txt")
-    time.sleep(0.5)  
+    #time.sleep(0.5)  
