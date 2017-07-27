@@ -49,7 +49,6 @@ class TerminalLog(threading.Thread):
         can_interface = self.interface
         bus = can.interface.Bus(can_interface, bustype='socketcan_ctypes')
 	self.flag = 1
-	
         while self.flag:
             message = bus.recv()
             if message is None:
@@ -69,7 +68,9 @@ class TerminalLog(threading.Thread):
 		    self.pots[1].insert(0,info[71:73])
 		    self.pots[2].insert(0,info[74:76])
 		    self.pots[3].insert(0,info[77:79])
-
+	
+	
+    
     def parametres(self,msg):
 	top = float(int(msg[77:82].replace(" ",""),16))/float(204)
 	bottom = float(int(msg[83:88].replace(" ",""),16))/float(204)
@@ -82,7 +83,15 @@ class TerminalLog(threading.Thread):
 	self.smokeP.insert(0,round(smokeP,4))
 	fic = open("params.txt","w")
 	fic.write(str(top)+"\n"+str(bottom))
+	data = str(smokeP)+":"+str(self.concen.get())+":"+str(top)+":"+str(bottom)+"\n"
+	#self.FichierExcel.write(data)
+	FichierE = open("FichierExcel.csv","a")
+	print >> FichierE,data
+	FichierE.close()
 	fic.close()
+	#print("$$$$$",self.FichierExcel)
+	#data = str(smokeP)+","+str(self.concen.get())+","+str(top)+","+str(bottom)+"\n"
+	#self.FichierExcel.write(data)
 	
     def clignotant(self, val):
 	val =  '{0:08b}'.format(int(val,16))[::-1]
@@ -110,8 +119,8 @@ class TerminalLog(threading.Thread):
 		# on récupere la concentration et la valeur du smoke P
 		self.listSmokeP.append(self.smokeP.get())
 		self.listConcen.append(self.concen.get())
-		self.widgets[1][1].configure(text=str(self.listSmokeP[0]))
-		self.widgets[1][2].configure(text=str(self.listConcen[0]))
+		#self.widgets[1][1].configure(text=str(self.listSmokeP[0]))
+		#self.widgets[1][2].configure(text=str(self.listConcen[0]))
 	    else:
 		pass
 	if val[5] == '0':
@@ -122,8 +131,8 @@ class TerminalLog(threading.Thread):
 		# on récupere la concentration et la valeur du smoke P
 		self.listSmokeP.append(self.smokeP.get())
 		self.listConcen.append(self.concen.get())
-		self.widgets[2][1].configure(text=str(self.listSmokeP[1]))
-		self.widgets[2][2].configure(text=str(self.listConcen[1]))
+		#self.widgets[2][1].configure(text=str(self.listSmokeP[1]))
+		#self.widgets[2][2].configure(text=str(self.listConcen[1]))
 	    else:
 		pass
 	if val[6] == '0':
@@ -135,8 +144,8 @@ class TerminalLog(threading.Thread):
 		# on récupere la concentration et la valeur du smoke P
 		self.listSmokeP.append(self.smokeP.get())
 		self.listConcen.append(self.concen.get())
-		self.widgets[3][1].configure(text=str(self.listSmokeP[2]))
-		self.widgets[3][2].configure(text=str(self.listConcen[2]))
+		#self.widgets[3][1].configure(text=str(self.listSmokeP[2]))
+		#self.widgets[3][2].configure(text=str(self.listConcen[2]))
 		
 	    else:
 		pass
@@ -149,8 +158,8 @@ class TerminalLog(threading.Thread):
 		self.listSmokeP.append(self.smokeP.get())
 		self.listConcen.append(self.concen.get())
 		#self.flag = 0
-		self.widgets[4][1].configure(text=str(self.listSmokeP[3]))
-		self.widgets[4][2].configure(text=str(self.listConcen[3]))
+		#self.widgets[4][1].configure(text=str(self.listSmokeP[3]))
+		#self.widgets[4][2].configure(text=str(self.listConcen[3]))
 	    else:
 		pass
 	print self.listSmokeP
@@ -164,10 +173,14 @@ class CalibrationLog(threading.Thread):
     def __init__(self,concen):
         threading.Thread.__init__(self)
         self.concentration = concen
-	
 
     def run(self):
 	self.flag = 1
+	# On calcule le Zero de reference reading en determinant la constante de l'équation
+	os.system('sudo /usr/local/bin/natinst/rpi/aiondemand -c 0 -s 1 -t 1 -v | tee tmp.txt > tmp3.txt ')
+	file = open("tmp.txt","rb")
+	self.k = round(float(file.readlines()[-1].replace(",","")),4)
+	file.close()
 	# on demande la valeur des potars
 	bus = can.interface.Bus()
 	msg = can.Message(arbitration_id=0x06103403,
@@ -186,7 +199,7 @@ class CalibrationLog(threading.Thread):
 	    file.close()
 	    self.concentration.delete(0,tk.END)
 	    y = round(resultat,4)
-	    x = -(y-2.6815)/0.0257
+	    x = -(y-self.k)/0.0257
 	    self.concentration.insert(0,round(x,1))
 	    
     def stop(self):
@@ -221,7 +234,7 @@ class MonGraphe2(tk.Frame):
 	    try:
 		if self.fenSmokeP.get():
 		    valeurSmokeP = float(self.fenSmokeP.get())
-		if self.fenConc.get():
+		if self.fenConc.get() and self.fenConc.get() != "INF":
 		    valeurConcentration = float(self.fenConc.get())
 		yield t, valeurConcentration, valeurSmokeP 
 	    except:
@@ -257,8 +270,8 @@ class MonGraphe2(tk.Frame):
 	if y >= self.ymax:
 	    self.ax.set_ylim(self.ymin, 2*self.ymax)
 	    self.ax.figure.canvas.draw()
-	if self.ymax >= 100 and y <= 20:
-	    self.ax.set_ylim(self.ymin, 20)
+	if self.ymax >= 100 and y <= 12:
+	    self.ax.set_ylim(self.ymin, 12)
 	    self.ax.figure.canvas.draw()
 	self.lineSmoke.set_data(self.xdata, self.ydata)
 	self.lineConc.set_data(self.xdata, self.concData)

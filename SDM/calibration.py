@@ -118,8 +118,8 @@ class Calibration(Frame):
 	#On affiche les valeurs principales
 	Label(self.frame1_1,text="Top", fg=fgColor, font=fontSimple, bg=bgColor).grid(padx=2,pady=2,row=0,column=0)
 	self.Top=Entry(self.frame1_1, font=fontSimple, width=entryLength)
-        self.Top.grid(padx=2,pady=2, row=0 ,column=1)
-	Label(self.frame1_1,text="Bottom", fg=fgColor, font=fontSimple, bg=bgColor).grid(padx=2,pady=2,row=1,column=0)
+        self.Top.grid(padx=2,pady=2, row=1 ,column=0)
+	Label(self.frame1_1,text="Bottom", fg=fgColor, font=fontSimple, bg=bgColor).grid(padx=2,pady=2,row=0,column=1)
 	self.Bottom=Entry(self.frame1_1, font=fontSimple, width=entryLength)
         self.Bottom.grid(padx=2,pady=2, row=1 ,column=1)
 	Label(self.frame1_1,text="Smoke P", fg=fgColor, font=fontSimple, bg=bgColor).grid(padx=2,pady=2,row=2,column=0)
@@ -172,6 +172,9 @@ class Calibration(Frame):
 	# Je mets les LEDs dans une liste ordonnées pour les controler ensemble
 	self.Leds = [self.Led0,self.Led1,self.Led2,self.Led3,self.Led4,self.Led5,self.Led6,self.Led7]
 	
+	# Le bouton "reference Reading"
+	self.boutonRefReading=Button(self.fenetre2,text="Reference Reading",bd=2, width=20, relief=RAISED, overrelief=RIDGE, bg=buttonColor, command=self.reference_reading)
+        self.boutonRefReading.pack(pady=5)
 	
 	
 	self.frame5 = Frame(self.fenetre2,bg=bgColor) # sert à bien arranger les labels et les entry pn, sn ...
@@ -219,13 +222,14 @@ class Calibration(Frame):
 	#self.canvas2 = Frame(self.frame20, width=370,heigh=250, bg="white",  bd=0, highlightthickness=2)
 	#self.canvas2.grid(padx=2,pady=2,row=0,column=1)
 	
-	# Bouton Charger qui permet d'ouvir la clé et de lire le contenu du smoke
-	self.boutonLoad=Button(self.fenetre2,text="CALIBRER",bd=2, width=60, relief=RAISED, overrelief=RIDGE, bg=buttonColor)
-        self.boutonLoad.pack(pady=5, side=TOP)
+	# Bouton calibrer
+	self.boutonCalibrer=Button(self.fenetre2,text="CALIBRER",bd=2, width=60, relief=RAISED, overrelief=RIDGE, bg=buttonColor)
+        self.boutonCalibrer.pack(pady=5, side=TOP)
 	
     ########## On désactive les widgets avant le démarrage
 	self.disable_fenetre(self.fenetre2)
 	self.boutonContinuer.configure(state='disabled')
+	
     #####################
     def start_calib(self):
 	# On efface tout le contenu des fenêtres 
@@ -260,14 +264,16 @@ class Calibration(Frame):
 			self.Concentration,
 			self._widgets)
 	    self.log0.start()
-	    self.thread_conc = classes.CalibrationLog(self.Concentration)
-	    self.thread_conc.start()
+	   
 	    #self.graphe1 = classes.MonGraphe(self.Top,fenetre_principale=self.canvas1)
 	    self.graphe2 = classes.MonGraphe2(self.SmokeP,self.Concentration,fenetre_principale=self.canvas1)
 	    #self.graphe = classes.MonGraphe3(self.SmokeP,self.Top,fenetre_principale=self.canvas2)
 	### On désactive le bouton
 	self.boutonContinuer.configure(state='disabled')
-   
+	# On désactive le boutonCalibrer
+	self.boutonCalibrer.configure(state='disabled')
+	# On insert "INF" dans l'EntryConcentration
+	self.Concentration.insert(0,"INF")
     #################
     def horn_cancel(self):
 	bus = can.interface.Bus()
@@ -278,7 +284,13 @@ class Calibration(Frame):
 	    bus.send(msg)
 	except can.CanError:
 	    print("Message NOT sent")
+     #################
+    def reference_reading(self):
+	self.Concentration.delete(0,END)
+	self.thread_conc = classes.CalibrationLog(self.Concentration)
+	self.thread_conc.start()
 	
+	self.boutonRefReading.configure(state='disabled')
     #######################################################
     
     

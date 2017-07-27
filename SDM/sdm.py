@@ -27,7 +27,7 @@ class SDM(Tk):
         self.title('Smoke Detector Maintenance')
         self.resizable(0, 0)
         self.configure(bg=bgColor)
-	self.geometry("1170x700")
+	self.geometry("1170x750")
 	self.protocol("WM_DELETE_WINDOW", self.quit)
 	"""x = (self.winfo_screenwidth() - self.winfo_reqwidth())/50
 	y = (self.winfo_screenheight() - self.winfo_reqheight())/50
