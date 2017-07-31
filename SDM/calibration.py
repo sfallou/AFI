@@ -88,7 +88,7 @@ class Calibration(Frame):
 	
 	###### Fêntre 1_ #########
 	self._widgets = []
-	for row in range(5):
+	for row in range(6):
             current_row = []
             for column in range(3):
                 label = Label(self.fenetre1_, borderwidth=0, width=15)
@@ -98,13 +98,14 @@ class Calibration(Frame):
 
         for column in range(3):
             self.grid_columnconfigure(column, weight=3)
-	
-	self._widgets[0][1].configure(text="Smoke P")
-	self._widgets[0][2].configure(text="Concentration")
-	self._widgets[1][0].configure(text="Pre-Alarm")
-	self._widgets[2][0].configure(text="Alarm Low")
-	self._widgets[3][0].configure(text="Alarm Lav")
-	self._widgets[4][0].configure(text="Alarm Mid/High")
+	self._widgets[0][0].configure(font=fontSimple, bg="white")
+	self._widgets[0][1].configure(text="Smoke P", font=fontSimple, bg="white")
+	self._widgets[0][2].configure(text="Concentration", font=fontSimple, bg="white")
+	self._widgets[1][0].configure(text="Alarm Lav ON", font=fontSimple, bg="white")
+	self._widgets[2][0].configure(text="Alarm Lav OFF", font=fontSimple, bg="white")
+	self._widgets[3][0].configure(text="Moyenne", font=fontSimple, bg="white")
+	self._widgets[4][0].configure(text="Max", font=fontSimple, bg="white")
+	self._widgets[5][0].configure(text="Min", font=fontSimple, bg="white")
 	
 	###### Fêntre 2 #########
 	self.frame1 = Frame(self.fenetre2,bg=bgColor) # sert à bien arranger les widgets de cette zone
@@ -195,6 +196,21 @@ class Calibration(Frame):
         self.POT4.grid(padx=2,pady=2, row=1 ,column=3)
 	# Je mets les POTs dans une liste ordonnées pour les controler ensemble
 	self.POTs = [self.POT1,self.POT2,self.POT3,self.POT4]
+	#On affiche les background
+	Label(self.frame5,text="Event Threshold", fg=fgColor, font=fontSimple, bg=bgColor).grid(padx=2,pady=2,row=2,column=0)
+	self.EventThreshold=Entry(self.frame5, font=fontSimple, width=entryLength)
+        self.EventThreshold.grid(padx=2,pady=2, row=3 ,column=0)
+	Label(self.frame5,text="Alarm Threshold", fg=fgColor, font=fontSimple, bg=bgColor).grid(padx=2,pady=2,row=2,column=1)
+	self.AlarmThreshold=Entry(self.frame5, font=fontSimple, width=entryLength)
+        self.AlarmThreshold.grid(padx=2,pady=2, row=3 ,column=1)
+	Label(self.frame5,text="IR Zero Cal", fg=fgColor, font=fontSimple, bg=bgColor).grid(padx=2,pady=2,row=2,column=2)
+	self.IRZeroCal=Entry(self.frame5, font=fontSimple, width=entryLength)
+        self.IRZeroCal.grid(padx=2,pady=2, row=3 ,column=2)
+	Label(self.frame5,text="Blue Zero Cal", fg=fgColor, font=fontSimple, bg=bgColor).grid(padx=2,pady=2,row=2,column=3)
+	self.BlueZeroCal=Entry(self.frame5, font=fontSimple, width=entryLength)
+        self.BlueZeroCal.grid(padx=2,pady=2, row=3 ,column=3)
+	# Je mets les backgrounds dans une liste ordonnées pour les controler ensemble
+	self.Backgrounds = [self.EventThreshold,self.AlarmThreshold,self.IRZeroCal,self.BlueZeroCal]
 	
 	#####
 	self.frame10 = Frame(self.fenetre2,bg=bgColor) # sert à bien arranger les labels et les entry pn, sn ...
@@ -247,31 +263,18 @@ class Calibration(Frame):
 	# On réactive les widgets
 	self.boutonContinuer.configure(state='normal', command=self.continuer_calib)
 	self.enable_fenetre(self.fenetre2)
-	# On desactive le bout
+	# On desactive le bouton Calibrer
+	self.boutonCalibrer.configure(state='disabled')
+	# On desactive le bouton RefReading
+	self.boutonRefReading.configure(state='disabled')
+	# On desactive le bouton StartCalib
+	self.boutonStartCalib.configure(state='disabled')
      #####################
     def continuer_calib(self):
-	# on établit la connexion avec la clé
-	res = self.open_dongle()
-	# Si res = 1, on lance le test et on affiche les trames CAN dans la zone logs ainsi que la progressBar
-	if res:
-	    self.log0 = classes.TerminalLog('ics0can0',
-			self.textLogs,
-			self.Leds,
-			self.POTs,
-			self.Top,
-			self.Bottom,
-			self.SmokeP,
-			self.Concentration,
-			self._widgets)
-	    self.log0.start()
-	   
-	    #self.graphe1 = classes.MonGraphe(self.Top,fenetre_principale=self.canvas1)
-	    self.graphe2 = classes.MonGraphe2(self.SmokeP,self.Concentration,fenetre_principale=self.canvas1)
-	    #self.graphe = classes.MonGraphe3(self.SmokeP,self.Top,fenetre_principale=self.canvas2)
 	### On désactive le bouton
 	self.boutonContinuer.configure(state='disabled')
-	# On désactive le boutonCalibrer
-	self.boutonCalibrer.configure(state='disabled')
+	# On réactive le bouton RefReading
+	self.boutonRefReading.configure(state='normal')
 	# On insert "INF" dans l'EntryConcentration
 	self.Concentration.insert(0,"INF")
     #################
@@ -286,10 +289,28 @@ class Calibration(Frame):
 	    print("Message NOT sent")
      #################
     def reference_reading(self):
-	self.Concentration.delete(0,END)
-	self.thread_conc = classes.CalibrationLog(self.Concentration)
-	self.thread_conc.start()
-	
+	# on établit la connexion avec la clé
+	res = self.open_dongle()
+	# Si res = 1, on lance le test et on affiche les trames CAN dans la zone logs ainsi que la progressBar
+	if res:
+	    self.Concentration.delete(0,END)
+	    self.thread_conc = classes.CalibrationLog(self.Concentration)
+	    self.thread_conc.start()
+	    self.log0 = classes.TerminalLog('ics0can0',
+			self.textLogs,
+			self.Leds,
+			self.POTs,
+			self.Backgrounds,
+			self.Top,
+			self.Bottom,
+			self.SmokeP,
+			self.Concentration,
+			self._widgets)
+	    self.log0.start()
+	   
+	    #self.graphe1 = classes.MonGraphe(self.Top,fenetre_principale=self.canvas1)
+	    self.graphe2 = classes.MonGraphe2(self.SmokeP,self.Concentration,fenetre_principale=self.canvas1)
+	    #self.graphe = classes.MonGraphe3(self.SmokeP,self.Top,fenetre_principale=self.canvas2)
 	self.boutonRefReading.configure(state='disabled')
     #######################################################
     

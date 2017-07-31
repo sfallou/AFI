@@ -31,12 +31,13 @@ valeurSmokeP = 0
 valeurConcentration = 0
 #####################################################
 class TerminalLog(threading.Thread):
-    def __init__(self,interface,terminal,leds,pots,top,bottom,smokeP,concen,widgets):
+    def __init__(self,interface,terminal,leds,pots,backgrounds,top,bottom,smokeP,concen,widgets):
         threading.Thread.__init__(self)
         self.interface = interface
 	self.terminal = terminal
 	self.leds = leds
 	self.pots = pots
+	self.bgcks = backgrounds
 	self.top = top
 	self.bottom = bottom
 	self.smokeP = smokeP
@@ -44,10 +45,13 @@ class TerminalLog(threading.Thread):
 	self.listSmokeP = []
 	self.listConcen = []
 	self.widgets = widgets
-
+	self.smkP = []
+	self.conc = []
     def run(self):
         can_interface = self.interface
         bus = can.interface.Bus(can_interface, bustype='socketcan_ctypes')
+	FichierE = open("FichierExcel.csv","w")
+	FichierE.close()
 	self.flag = 1
         while self.flag:
             message = bus.recv()
@@ -68,7 +72,15 @@ class TerminalLog(threading.Thread):
 		    self.pots[1].insert(0,info[71:73])
 		    self.pots[2].insert(0,info[74:76])
 		    self.pots[3].insert(0,info[77:79])
-	
+		
+		elif info[36:44] == "06121d03":
+		    for i in range(4):
+			self.bgcks[i].delete(0,tk.END)
+		    self.bgcks[0].insert(0,info[65:70].replace(" ","").lstrip("0"))
+		    self.bgcks[1].insert(0,info[71:76].replace(" ","").lstrip("0"))
+		    self.bgcks[2].insert(0,info[77:82].replace(" ","").lstrip("0"))
+		    self.bgcks[3].insert(0,info[83:88].replace(" ","").lstrip("0"))
+	 
 	
     
     def parametres(self,msg):
@@ -84,15 +96,11 @@ class TerminalLog(threading.Thread):
 	fic = open("params.txt","w")
 	fic.write(str(top)+"\n"+str(bottom))
 	data = str(smokeP)+":"+str(self.concen.get())+":"+str(top)+":"+str(bottom)+"\n"
-	#self.FichierExcel.write(data)
 	FichierE = open("FichierExcel.csv","a")
 	print >> FichierE,data
 	FichierE.close()
 	fic.close()
-	#print("$$$$$",self.FichierExcel)
-	#data = str(smokeP)+","+str(self.concen.get())+","+str(top)+","+str(bottom)+"\n"
-	#self.FichierExcel.write(data)
-	
+		
     def clignotant(self, val):
 	val =  '{0:08b}'.format(int(val,16))[::-1]
 	if val[0] == '0':
@@ -115,7 +123,7 @@ class TerminalLog(threading.Thread):
 	    self.leds[4].create_oval(0,0,15,15, fill="grey")
 	if val[4] == '1':
 	    self.leds[4].create_oval(0,0,15,15, fill="green2")
-	    if len(self.listSmokeP) < 1:
+	    """if len(self.listSmokeP) < 1:
 		# on récupere la concentration et la valeur du smoke P
 		self.listSmokeP.append(self.smokeP.get())
 		self.listConcen.append(self.concen.get())
@@ -123,11 +131,12 @@ class TerminalLog(threading.Thread):
 		#self.widgets[1][2].configure(text=str(self.listConcen[0]))
 	    else:
 		pass
+	    """
 	if val[5] == '0':
 	    self.leds[5].create_oval(0,0,15,15, fill="grey")
 	if val[5] == '1':
 	    self.leds[5].create_oval(0,0,15,15, fill="green2")
-	    if len(self.listSmokeP) < 2:
+	    """if len(self.listSmokeP) < 2:
 		# on récupere la concentration et la valeur du smoke P
 		self.listSmokeP.append(self.smokeP.get())
 		self.listConcen.append(self.concen.get())
@@ -135,25 +144,57 @@ class TerminalLog(threading.Thread):
 		#self.widgets[2][2].configure(text=str(self.listConcen[1]))
 	    else:
 		pass
+	    """
 	if val[6] == '0':
 	    self.leds[6].create_oval(0,0,15,15, fill="grey")
+	    if len(self.listSmokeP) == 1:
+		# on récupere la concentration et la valeur du smoke P pour Alarm Lav OFF
+		self.listSmokeP.append(float(self.smokeP.get()))
+		self.listConcen.append(self.concen.get())
+		if len(self.smkP) >= 120:
+		    self.flag = 0
+		    # On ajoute les valeurs moyennes
+		    self.listSmokeP.append(round(np.mean(self.smkP),3))
+		    self.listConcen.append(round(np.mean(self.conc),3))
+		    # On ajoute les valeurs Max
+		    self.listSmokeP.append(round(np.max(self.smkP),3))
+		    self.listConcen.append(round(np.max(self.conc),3))
+		    # On ajoute les valeurs min
+		    self.listSmokeP.append(round(np.min(self.smkP),3))
+		    self.listConcen.append(round(np.min(self.conc),3))
+		    # On affiche les resultats dans le tableau
+		    self.widgets[1][1].configure(text=str(self.listSmokeP[0]))
+		    self.widgets[2][1].configure(text=str(self.listSmokeP[1]))
+		    self.widgets[3][1].configure(text=str(self.listSmokeP[2]))
+		    self.widgets[4][1].configure(text=str(self.listSmokeP[3]))
+		    self.widgets[5][1].configure(text=str(self.listSmokeP[4]))
+		    
+		    self.widgets[1][2].configure(text=str(self.listConcen[0]))
+		    self.widgets[2][2].configure(text=str(self.listConcen[1]))
+		    self.widgets[3][2].configure(text=str(self.listConcen[2]))
+		    self.widgets[4][2].configure(text=str(self.listConcen[3]))
+		    self.widgets[5][2].configure(text=str(self.listConcen[4]))
 	if val[6] == '1':
 	    self.leds[6].create_oval(0,0,15,15, fill="green2")
 	    #self.flag = 0
-	    if len(self.listSmokeP) < 3:
-		# on récupere la concentration et la valeur du smoke P
-		self.listSmokeP.append(self.smokeP.get())
-		self.listConcen.append(self.concen.get())
+	    val1 = self.smokeP.get()
+	    val2 = self.concen.get()
+	    if len(self.listSmokeP) == 0:
+		# on récupere la concentration et la valeur du smoke P pour Alarm Lav ON
+		self.listSmokeP.append(float(val1))
+		self.listConcen.append(val2)
 		#self.widgets[3][1].configure(text=str(self.listSmokeP[2]))
 		#self.widgets[3][2].configure(text=str(self.listConcen[2]))
-		
-	    else:
-		pass
+	    
+	    self.smkP.append(float(val1))
+	    if val2 != '':
+		self.conc.append(float(val2))
+	    
 	if val[7] == '0':
 	    self.leds[7].create_oval(0,0,15,15, fill="grey")
 	if val[7] == '1':
 	    self.leds[7].create_oval(0,0,15,15, fill="green2")
-	    if len(self.listSmokeP) < 4:
+	    """if len(self.listSmokeP) < 4:
 		# on récupere la concentration et la valeur du smoke P
 		self.listSmokeP.append(self.smokeP.get())
 		self.listConcen.append(self.concen.get())
@@ -162,6 +203,7 @@ class TerminalLog(threading.Thread):
 		#self.widgets[4][2].configure(text=str(self.listConcen[3]))
 	    else:
 		pass
+	    """
 	print self.listSmokeP
 	print self.listConcen
 	
@@ -185,6 +227,16 @@ class CalibrationLog(threading.Thread):
 	bus = can.interface.Bus()
 	msg = can.Message(arbitration_id=0x06103403,
                       data=[0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+                      extended_id=True)
+	try:
+	    bus.send(msg)
+	except can.CanError:
+	    print("Message NOT sent")
+	
+	# on demande la valeur des backgrounds
+	bus = can.interface.Bus()
+	msg = can.Message(arbitration_id=0x06103403,
+                      data=[0x0a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
                       extended_id=True)
 	try:
 	    bus.send(msg)
