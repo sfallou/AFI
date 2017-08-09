@@ -45,9 +45,8 @@ class Calibration(Frame):
 	self.configure(bg=bgColor)
 	
 	# Les autres attributs
-	self.fig1 = plt.Figure()
-	self.fig2 = plt.Figure()
-	self.xdata_1, self.ydata_1 = [], []
+	self.SN = ""
+	self.PN = ""
 	
 
 	# Les différentes zone de l'interface initialisées au démarrage
@@ -85,7 +84,9 @@ class Calibration(Frame):
 	# 
 	self.boutonContinuer=Button(self.fenetre1,text="Continuer",bd=2, width=30, relief=RAISED, overrelief=RIDGE, bg=buttonColor)
         self.boutonContinuer.pack(pady=5)
-	
+	# La barre de progression
+	self.progressBar = ttk.Progressbar(self.fenetre1,orient="horizontal",length=500,mode="determinate")
+	self.progressBar.pack(pady=5)
 	###### Fêntre 1_ #########
 	self._widgets = []
 	for row in range(6):
@@ -106,6 +107,10 @@ class Calibration(Frame):
 	self._widgets[3][0].configure(text="Moyenne", font=fontSimple, bg="white")
 	self._widgets[4][0].configure(text="Max", font=fontSimple, bg="white")
 	self._widgets[5][0].configure(text="Min", font=fontSimple, bg="white")
+	
+	# 
+	self.boutonClear=Button(self.fenetre1_,text="Clear ",bd=2, width=10, relief=RAISED, overrelief=RIDGE, bg=buttonColor, state = 'disabled',command=self.clear_table)
+        self.boutonClear.grid(row=6, column=1, sticky="nsew", padx=1, pady=15)
 	
 	###### Fêntre 2 #########
 	self.frame1 = Frame(self.fenetre2,bg=bgColor) # sert à bien arranger les widgets de cette zone
@@ -239,17 +244,19 @@ class Calibration(Frame):
 	#self.canvas2.grid(padx=2,pady=2,row=0,column=1)
 	
 	# Bouton calibrer
-	self.boutonCalibrer=Button(self.fenetre2,text="CALIBRER",bd=2, width=60, relief=RAISED, overrelief=RIDGE, bg=buttonColor)
+	self.boutonCalibrer=Button(self.fenetre2,text="CALIBRER",bd=2, width=60, relief=RAISED, overrelief=RIDGE, bg=buttonColor, command=self.calibration)
         self.boutonCalibrer.pack(pady=5, side=TOP)
 	
     ########## On désactive les widgets avant le démarrage
 	self.disable_fenetre(self.fenetre2)
 	self.boutonContinuer.configure(state='disabled')
 	
+	
     #####################
     def start_calib(self):
 	# On efface tout le contenu des fenêtres 
 	self.clean_interface()
+	
 	# On affiche les consignes
 	try:
 	    #on ouvre consignes.txt et on l'affiche dans la zone de texte
@@ -305,13 +312,104 @@ class Calibration(Frame):
 			self.Bottom,
 			self.SmokeP,
 			self.Concentration,
-			self._widgets)
+			self._widgets,
+			self.boutonCalibrer,
+			self.boutonClear)
 	    self.log0.start()
 	   
 	    #self.graphe1 = classes.MonGraphe(self.Top,fenetre_principale=self.canvas1)
 	    self.graphe2 = classes.MonGraphe2(self.SmokeP,self.Concentration,fenetre_principale=self.canvas1)
 	    #self.graphe = classes.MonGraphe3(self.SmokeP,self.Top,fenetre_principale=self.canvas2)
+	  
 	self.boutonRefReading.configure(state='disabled')
+     #######################################################
+    
+    
+    def calibration(self):
+	# On récupère les données du tableau
+	smokeP_moyenne = round(float(self._widgets[3][1].cget("text")),1)
+	concentration_moyenne = round(float(self._widgets[3][2].cget("text")),1)
+	# On récupère les valeurs des potars
+	potars = []
+	backgrounds = []
+    
+	for p in self.POTs:
+	    potars.append(int(p.get(),16))
+	for b in self.Backgrounds:
+	    backgrounds.append(int(b.get(),16))
+	
+	print smokeP_moyenne
+	print concentration_moyenne
+	print ("Avant Calibration: ", potars)
+	print backgrounds
+	
+	# Les écarts entre les valeurs récupérées et les données de référence
+	ecart_smokeP = smokeP_moyenne - 6
+	ecart_conc = concentration_moyenne - 1.2
+	# Si la calibration est bonne on envoie un message
+	if abs(ecart_smokeP) <= 0.2 : #and abs(ecart_conc) <= 0.2 : 
+	    showinfo("Calibration correcte","Le smoke P et la concentration sont conformes aux exigences du CMM")
+	# Sinon on ajuste les potars
+	else:
+	    valeurPotarAdd = 0
+	    if ecart_smokeP > 0: # Le smokeP est élevé
+		if abs(ecart_smokeP) >= 1:
+		    valeurPotarAdd = int(abs(ecart_smokeP))
+		else:
+		    valeurPotarAdd = 1
+		
+		pot0 = potars[0]
+		pot1 = potars[1]
+		pot2 = potars[2]
+		pot3 = potars[3]
+		
+		for i in range(6*valeurPotarAdd):
+		    pot2 += 1
+		
+		for i in range(3*valeurPotarAdd):
+		    pot3 -= 1
+		
+		if pot2 >= 0x32 and pot2 <= 0x96:
+		    potars[2] = pot2
+		elif pot3 >= 0x14 and pot3 <= 0x5A:
+		    potars[3] = pot3
+	    # On ecrit ces nouvelles valeurs de potars
+	    bus = can.interface.Bus()
+	    #set
+	    msg1 = can.Message(arbitration_id=0x06103403,
+                      data=[0x17, 0x0e, potars[0], potars[1], potars[2], potars[3], 0x00, 0x00],
+                      extended_id=True)
+	    #clear
+	    msg2 = can.Message(arbitration_id=0x06103403,
+                      data=[0x17, 0x0e, potars[0], potars[1], potars[2], potars[3], 0x01, 0x01],
+                      extended_id=True)
+	   
+	    #Zero
+	    msg4 = can.Message(arbitration_id=0x06103403,
+                      data=[0x17, 0x0e, potars[0], potars[1], potars[2], potars[3], 0x00, 0x01],
+                      extended_id=True)
+	    try:
+		bus.send(msg1)
+		bus.send(msg2)
+		bus.send(msg4)
+	    except can.CanError:
+		print("Message NOT sent")
+	    
+	    # On réaffiche les newPotars
+	    anx = classes.Annexes()
+	    anx.get_potars()
+	print("Apres Calibration: ", potars)
+	
+    
+     #####################
+    def clear_table(self):
+	self.annexe = classes.Annexes()
+	self.annexe.clear()
+	for i in range(1,6):
+	    self._widgets[i][1].configure(text="")
+	    self._widgets[i][2].configure(text="")
+	#On désactive le bouton calibrer
+	self.boutonCalibrer.configure(state='disabled')
     #######################################################
     
     
@@ -335,11 +433,7 @@ class Calibration(Frame):
     def clean_interface(self):
 	self.textLogs.delete('0.0',END)
 	self.textConsigne.delete('0.0',END)
-	"""self.canvas.create_oval(0,0,35,35, fill=self.couleurSignal2)
-	self.canvas2.create_oval(0,0,35,35, fill=self.couleurSignal2)
-	for child in self.entries:
-	    child.delete(0,END)
-	"""
+	
      #####################################################
     def open_dongle(self):
 	#self.close_dongle() # au cas ou le processus etait toujours en vie

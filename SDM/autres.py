@@ -228,7 +228,7 @@ class Autres(Frame):
     def write_memory(self):
         try:
 	    memoire = int(self.EntryWriteCaseMemoire.get(),16)
-	    data = int(self.EntryWriteDatas.get())
+	    data = self.EntryWriteDatas.get()
 	    if len(str(data))<=8:
 		write_adress_memory = WriteAdressMemory(memoire,data)
 		# On démarre l'écoute des logs

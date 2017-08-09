@@ -29,10 +29,10 @@ class SDM(Tk):
         self.configure(bg=bgColor)
 	self.geometry("1170x800")
 	self.protocol("WM_DELETE_WINDOW", self.quit)
-	"""x = (self.winfo_screenwidth() - self.winfo_reqwidth())/50
+	x = (self.winfo_screenwidth() - self.winfo_reqwidth())/50
 	y = (self.winfo_screenheight() - self.winfo_reqheight())/50
 	self.geometry("+%d+%d"%(x,y))
-	"""
+	
 	####
 	self.menu()
 	###
@@ -92,7 +92,7 @@ class SDM(Tk):
 	self.testReceptionPage = tR.TestReception(fenetre_principale=self)
 	self.testReceptionPage.pack()
 	self.configurationPage = conf.Configuration(fenetre_principale=self)
-	self.calibrationPage = conf.Calibration(fenetre_principale=self)
+	self.calibrationPage = calib.Calibration(fenetre_principale=self)
 	self.autrePage = autr.Autres(fenetre_principale=self)
     
     def cacher(self):

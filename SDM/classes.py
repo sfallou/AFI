@@ -29,9 +29,13 @@ tailleBorder = 2 # borderwidth
 valeurTop = 0
 valeurSmokeP = 0
 valeurConcentration = 0
+arraySmokeP = []
+arrayConcen = []
+smkP = []
+conc = []
 #####################################################
 class TerminalLog(threading.Thread):
-    def __init__(self,interface,terminal,leds,pots,backgrounds,top,bottom,smokeP,concen,widgets):
+    def __init__(self,interface,terminal,leds,pots,backgrounds,top,bottom,smokeP,concen,widgets,Boutoncalib,Boutonclear):
         threading.Thread.__init__(self)
         self.interface = interface
 	self.terminal = terminal
@@ -42,16 +46,22 @@ class TerminalLog(threading.Thread):
 	self.bottom = bottom
 	self.smokeP = smokeP
 	self.concen = concen
-	self.listSmokeP = []
-	self.listConcen = []
+	#self.listSmokeP = []
+	#self.listConcen = []
 	self.widgets = widgets
-	self.smkP = []
-	self.conc = []
+	self.BoutonCalib = Boutoncalib
+	self.BoutonClear = Boutonclear
+	#self.smkP = []
+	#self.conc = []
+	self.SN = ""
+	self.PN = ""
+	
+	
     def run(self):
+	global arraySmokeP, arrayConcen, smkP, conc
         can_interface = self.interface
         bus = can.interface.Bus(can_interface, bustype='socketcan_ctypes')
-	FichierE = open("FichierExcel.csv","w")
-	FichierE.close()
+	
 	self.flag = 1
         while self.flag:
             message = bus.recv()
@@ -66,6 +76,7 @@ class TerminalLog(threading.Thread):
 		    self.terminal.insert('0.0', info)
 		    
 		elif info[36:44] == "0611e103":
+		    print(message)
 		    for i in range(4):
 			self.pots[i].delete(0,tk.END)
 		    self.pots[0].insert(0,info[68:70])
@@ -74,15 +85,25 @@ class TerminalLog(threading.Thread):
 		    self.pots[3].insert(0,info[77:79])
 		
 		elif info[36:44] == "06121d03":
+		   
 		    for i in range(4):
 			self.bgcks[i].delete(0,tk.END)
 		    self.bgcks[0].insert(0,info[65:70].replace(" ","").lstrip("0"))
 		    self.bgcks[1].insert(0,info[71:76].replace(" ","").lstrip("0"))
 		    self.bgcks[2].insert(0,info[77:82].replace(" ","").lstrip("0"))
 		    self.bgcks[3].insert(0,info[83:88].replace(" ","").lstrip("0"))
-	 
+		    
+		elif info[36:44] == "06125903":
+		    self.SN = info[65:88].replace(" ","").decode("hex")
+		    
+		elif info[36:44] == "06107903":
+		    self.PN = info[65:76].replace(" ","")
+		#print("PN: ", self.PN)
+		#print("SN :", self.SN)
+		
+		
 	
-    
+		
     def parametres(self,msg):
 	top = float(int(msg[77:82].replace(" ",""),16))/float(204)
 	bottom = float(int(msg[83:88].replace(" ",""),16))/float(204)
@@ -95,13 +116,11 @@ class TerminalLog(threading.Thread):
 	self.smokeP.insert(0,round(smokeP,4))
 	fic = open("params.txt","w")
 	fic.write(str(top)+"\n"+str(bottom))
-	data = str(smokeP)+":"+str(self.concen.get())+":"+str(top)+":"+str(bottom)+"\n"
-	FichierE = open("FichierExcel.csv","a")
-	print >> FichierE,data
-	FichierE.close()
+	
 	fic.close()
 		
     def clignotant(self, val):
+	global arraySmokeP, arrayConcen, smkP, conc
 	val =  '{0:08b}'.format(int(val,16))[::-1]
 	if val[0] == '0':
 	    self.leds[0].create_oval(0,0,15,15, fill="grey")
@@ -123,89 +142,85 @@ class TerminalLog(threading.Thread):
 	    self.leds[4].create_oval(0,0,15,15, fill="grey")
 	if val[4] == '1':
 	    self.leds[4].create_oval(0,0,15,15, fill="green2")
-	    """if len(self.listSmokeP) < 1:
-		# on récupere la concentration et la valeur du smoke P
-		self.listSmokeP.append(self.smokeP.get())
-		self.listConcen.append(self.concen.get())
-		#self.widgets[1][1].configure(text=str(self.listSmokeP[0]))
-		#self.widgets[1][2].configure(text=str(self.listConcen[0]))
-	    else:
-		pass
-	    """
+	    
 	if val[5] == '0':
 	    self.leds[5].create_oval(0,0,15,15, fill="grey")
 	if val[5] == '1':
 	    self.leds[5].create_oval(0,0,15,15, fill="green2")
-	    """if len(self.listSmokeP) < 2:
-		# on récupere la concentration et la valeur du smoke P
-		self.listSmokeP.append(self.smokeP.get())
-		self.listConcen.append(self.concen.get())
-		#self.widgets[2][1].configure(text=str(self.listSmokeP[1]))
-		#self.widgets[2][2].configure(text=str(self.listConcen[1]))
-	    else:
-		pass
-	    """
+	    
 	if val[6] == '0':
 	    self.leds[6].create_oval(0,0,15,15, fill="grey")
-	    if len(self.listSmokeP) == 1:
+	    if len(arraySmokeP) == 1:
 		# on récupere la concentration et la valeur du smoke P pour Alarm Lav OFF
-		self.listSmokeP.append(float(self.smokeP.get()))
-		self.listConcen.append(self.concen.get())
-		if len(self.smkP) >= 120:
-		    self.flag = 0
+		arraySmokeP.append(float(self.smokeP.get()))
+		arrayConcen.append(self.concen.get())
+		# On affiche les valeurs
+		self.widgets[2][1].configure(text=str(arraySmokeP[1]))
+		self.widgets[2][2].configure(text=str(arrayConcen[1]))
+		
+		if len(smkP) >= 100 :
+		    #self.flag = 0
 		    # On ajoute les valeurs moyennes
-		    self.listSmokeP.append(round(np.mean(self.smkP),3))
-		    self.listConcen.append(round(np.mean(self.conc),3))
+		    arraySmokeP.append(round(np.mean(smkP),3))
+		    arrayConcen.append(round(np.mean(conc),3))
 		    # On ajoute les valeurs Max
-		    self.listSmokeP.append(round(np.max(self.smkP),3))
-		    self.listConcen.append(round(np.max(self.conc),3))
+		    arraySmokeP.append(round(np.max(smkP),3))
+		    arrayConcen.append(round(np.max(conc),3))
 		    # On ajoute les valeurs min
-		    self.listSmokeP.append(round(np.min(self.smkP),3))
-		    self.listConcen.append(round(np.min(self.conc),3))
-		    # On affiche les resultats dans le tableau
-		    self.widgets[1][1].configure(text=str(self.listSmokeP[0]))
-		    self.widgets[2][1].configure(text=str(self.listSmokeP[1]))
-		    self.widgets[3][1].configure(text=str(self.listSmokeP[2]))
-		    self.widgets[4][1].configure(text=str(self.listSmokeP[3]))
-		    self.widgets[5][1].configure(text=str(self.listSmokeP[4]))
+		    arraySmokeP.append(round(np.min(smkP),3))
+		    arrayConcen.append(round(np.min(conc),3))
 		    
-		    self.widgets[1][2].configure(text=str(self.listConcen[0]))
-		    self.widgets[2][2].configure(text=str(self.listConcen[1]))
-		    self.widgets[3][2].configure(text=str(self.listConcen[2]))
-		    self.widgets[4][2].configure(text=str(self.listConcen[3]))
-		    self.widgets[5][2].configure(text=str(self.listConcen[4]))
+		    # On affiche les resultats dans le tableau
+		   
+		    self.widgets[3][1].configure(text=str(arraySmokeP[2]))
+		    self.widgets[4][1].configure(text=str(arraySmokeP[3]))
+		    self.widgets[5][1].configure(text=str(arraySmokeP[4]))
+		    		    
+		    self.widgets[3][2].configure(text=str(arrayConcen[2]))
+		    self.widgets[4][2].configure(text=str(arrayConcen[3]))
+		    self.widgets[5][2].configure(text=str(arrayConcen[4]))
+		    # On active le bouton calibrer
+		    self.BoutonCalib.configure(state='normal')
+		    # On active le bouton clear
+		    self.BoutonClear.configure(state='normal')
+		    # on affiche une message d'information
+		    showinfo("Test de fumée Terminé","Les résultats sont affichés dans le tableau. Merci de vider complètement la fumée avant de calibrer si nécessaire.")
+		   
+		else:
+		    # on affiche une message d'information
+		    showerror("Données insuffisantes!","Pas assez d'acquisitions pour calculer convenablement les valeurs moyennes.Veuillez recommencer")
+		
 	if val[6] == '1':
 	    self.leds[6].create_oval(0,0,15,15, fill="green2")
 	    #self.flag = 0
 	    val1 = self.smokeP.get()
 	    val2 = self.concen.get()
-	    if len(self.listSmokeP) == 0:
+	    if len(arraySmokeP) == 0:
 		# on récupere la concentration et la valeur du smoke P pour Alarm Lav ON
-		self.listSmokeP.append(float(val1))
-		self.listConcen.append(val2)
-		#self.widgets[3][1].configure(text=str(self.listSmokeP[2]))
-		#self.widgets[3][2].configure(text=str(self.listConcen[2]))
+		arraySmokeP.append(float(val1))
+		arrayConcen.append(val2)
+		# On affiche les resultats dans le tableau
+		self.widgets[1][1].configure(text=str(arraySmokeP[0]))
+		self.widgets[1][2].configure(text=str(arrayConcen[0]))
+		
 	    
-	    self.smkP.append(float(val1))
-	    if val2 != '':
-		self.conc.append(float(val2))
+	    if val2 != '' and float(val2) >= 1 and float(val2) <=1.4:
+		conc.append(float(val2))
+		smkP.append(float(val1))
+		if len(smkP) == 100 :
+		    # on affiche une message d'information
+		    showinfo("Données suffisantes!","Vous pouvez videz doucement la fumée")
 	    
 	if val[7] == '0':
 	    self.leds[7].create_oval(0,0,15,15, fill="grey")
 	if val[7] == '1':
 	    self.leds[7].create_oval(0,0,15,15, fill="green2")
-	    """if len(self.listSmokeP) < 4:
-		# on récupere la concentration et la valeur du smoke P
-		self.listSmokeP.append(self.smokeP.get())
-		self.listConcen.append(self.concen.get())
-		#self.flag = 0
-		#self.widgets[4][1].configure(text=str(self.listSmokeP[3]))
-		#self.widgets[4][2].configure(text=str(self.listConcen[3]))
-	    else:
-		pass
-	    """
-	print self.listSmokeP
-	print self.listConcen
+	    
+	print arraySmokeP
+	print arrayConcen
+	print len(conc)
+    
+   
 	
     def stop(self):
 	self.flag = 0
@@ -238,6 +253,16 @@ class CalibrationLog(threading.Thread):
 	msg = can.Message(arbitration_id=0x06103403,
                       data=[0x0a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
                       extended_id=True)
+	try:
+	    bus.send(msg)
+	except can.CanError:
+	    print("Message NOT sent")
+	
+	# On demande la valeur des PN et SN
+	bus = can.interface.Bus()
+	msg = can.Message(arbitration_id=0x06103403,
+		    data=[0x03, 0x00, 0x00, 0x00, 0xff, 0x7f, 0x00, 0x00],
+		    extended_id=True)
 	try:
 	    bus.send(msg)
 	except can.CanError:
@@ -297,7 +322,7 @@ class MonGraphe2(tk.Frame):
 
 
     def init(self):
-	self.ax.set_ylim(-1, 12)
+	self.ax.set_ylim(-1, 15)
 	self.ax.set_xlim(0, 10)
 	del self.xdata[:]
 	del self.ydata[:]
@@ -331,20 +356,66 @@ class MonGraphe2(tk.Frame):
 
 
 	return self.lineSmoke,self.lineConc,
-###################################################
-class HornCancel(threading.Thread):
+
+class Annexes:
     def __init__(self):
-        threading.Thread.__init__(self)
-       
-    def run(self):
+	self.var = "OK"
+	
+    def clear(self):
+	global arraySmokeP, arrayConcen, smkP, conc
+	
+	# On reinitialise les listes à 0
+	smkP = []
+	conc = []
+	arraySmokeP = []
+	arrayConcen = []
+	
+    def get_potars(self):
+	# on demande la valeur des potars
+	bus = can.interface.Bus()
 	msg = can.Message(arbitration_id=0x06103403,
-                      data=[0x16, 0x00, 0x00, 0x00, 0xff, 0x7f, 0x00, 0x00],
+                      data=[0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
                       extended_id=True)
 	try:
 	    bus.send(msg)
 	except can.CanError:
 	    print("Message NOT sent")
-
+	
+	# on demande la valeur des backgrounds
+	bus = can.interface.Bus()
+	msg = can.Message(arbitration_id=0x06103403,
+                      data=[0x0a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+                      extended_id=True)
+	try:
+	    bus.send(msg)
+	except can.CanError:
+	    print("Message NOT sent")
+    
+    def set_potars(self,pots):
+	bus = can.interface.Bus()
+	#set
+	msg1 = can.Message(arbitration_id=0x06103403,
+                      data=[0x17, 0x0e, pots[0], pots[1], pots[2], pots[3], 0x00, 0x00],
+                      extended_id=True)
+	#clear
+	msg2 = can.Message(arbitration_id=0x06103403,
+                      data=[0x17, 0x0e, pots[0], pots[1], pots[2], pots[3], 0x01, 0x01],
+                      extended_id=True)
+	#clear
+	msg3 = can.Message(arbitration_id=0x06103403,
+                      data=[0x17, 0x0e, pots[0], pots[1], pots[2], pots[3], 0x01, 0x01],
+                      extended_id=True)
+	#Zero
+	msg4 = can.Message(arbitration_id=0x06103403,
+                      data=[0x17, 0x0e, pots[0], pots[1], pots[2], pots[3], 0x00, 0x01],
+                      extended_id=True)
+	try:
+	    bus.send(msg1)
+	    bus.send(msg2)
+	    bus.send(msg3)
+	    bus.send(msg4)
+	except can.CanError:
+	    print("Message NOT sent")
 #########################################################
 if __name__ == "__main__":
     #app = ExampleApp()
