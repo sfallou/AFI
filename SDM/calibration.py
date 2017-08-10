@@ -329,6 +329,8 @@ class Calibration(Frame):
 	# On récupère les données du tableau
 	smokeP_moyenne = round(float(self._widgets[3][1].cget("text")),1)
 	concentration_moyenne = round(float(self._widgets[3][2].cget("text")),1)
+	alarm_lav_on = round(float(self._widgets[1][1].cget("text")),1)
+	alarm_lav_off = round(float(self._widgets[2][1].cget("text")),1)
 	# On récupère les valeurs des potars
 	potars = []
 	backgrounds = []
@@ -338,42 +340,73 @@ class Calibration(Frame):
 	for b in self.Backgrounds:
 	    backgrounds.append(int(b.get(),16))
 	
-	print smokeP_moyenne
-	print concentration_moyenne
-	print ("Avant Calibration: ", potars)
-	print backgrounds
+	print ("smokeP moyenne", smokeP_moyenne)
+	print ("concentration moyenne", concentration_moyenne)
+	print("alarm lav on", alarm_lav_on)
+	print("alarm lav off", alarm_lav_off)
+	print ("Potars avant Calibration: ", potars)
+	print ("Background avant calibration", backgrounds)
 	
 	# Les écarts entre les valeurs récupérées et les données de référence
 	ecart_smokeP = smokeP_moyenne - 6
 	ecart_conc = concentration_moyenne - 1.2
 	# Si la calibration est bonne on envoie un message
-	if abs(ecart_smokeP) <= 0.2 : #and abs(ecart_conc) <= 0.2 : 
+	if abs(ecart_smokeP) <= 0.2 and abs(ecart_conc) <= 0.2 : 
 	    showinfo("Calibration correcte","Le smoke P et la concentration sont conformes aux exigences du CMM")
 	# Sinon on ajuste les potars
 	else:
+	    pot0 = potars[0]
+	    pot1 = potars[1]
+	    pot2 = potars[2]
+	    pot3 = potars[3]
 	    valeurPotarAdd = 0
-	    if ecart_smokeP > 0: # Le smokeP est élevé
+	    ##### Le smokeP est élevé mais la concentration bonne
+	    if ecart_smokeP > 0 and abs(ecart_conc) <= 0.2 : 
 		if abs(ecart_smokeP) >= 1:
 		    valeurPotarAdd = int(abs(ecart_smokeP))
 		else:
 		    valeurPotarAdd = 1
 		
-		pot0 = potars[0]
-		pot1 = potars[1]
-		pot2 = potars[2]
-		pot3 = potars[3]
-		
-		for i in range(6*valeurPotarAdd):
-		    pot2 += 1
-		
+		# On commence par augmenter pot2
+		val = 6*valeurPotarAdd
+		for i in range(val):
+		    if pot2 > 0x32 and pot2 < 0x96:
+			pot2 += 1
+			valeurPotarAdd -=1
+		    else:
+			break
+		# Ensuite, on prend la valeur restante et on diminue pot3 
 		for i in range(3*valeurPotarAdd):
-		    pot3 -= 1
+		    if pot3 > 0x14 and pot3 < 0x5A:
+			pot3 -= 1
+		    else:
+			break
+	    ##### Le smokeP est faible mais la concentration bonne
+	    if ecart_smokeP < 0 and abs(ecart_conc) <= 0.2 : 
+		if abs(ecart_smokeP) >= 1:
+		    valeurPotarAdd = int(abs(ecart_smokeP))
+		else:
+		    valeurPotarAdd = 1
 		
-		if pot2 >= 0x32 and pot2 <= 0x96:
-		    potars[2] = pot2
-		elif pot3 >= 0x14 and pot3 <= 0x5A:
-		    potars[3] = pot3
-	    # On ecrit ces nouvelles valeurs de potars
+		# On commence par diminuer pot2
+		val = 6*valeurPotarAdd
+		for i in range(val):
+		    if pot2 > 0x32 and pot2 < 0x96:
+			pot2 -= 1
+			valeurPotarAdd -=1
+		    else:
+			break
+		# Ensuite, on prend la valeur restante et on augmente pot3 
+		for i in range(3*valeurPotarAdd):
+		    if pot3 > 0x14 and pot3 < 0x5A:
+			pot3 += 1
+		    else:
+			break
+	    ####### finalement on a les nouvelles valeurs de pot3 et pot2
+	    potars[2] = pot2
+	    potars[3] = pot3
+		
+	    ##### On ecrit ces nouvelles valeurs de potars dans le NVM
 	    bus = can.interface.Bus()
 	    #set
 	    msg1 = can.Message(arbitration_id=0x06103403,
@@ -398,7 +431,7 @@ class Calibration(Frame):
 	    # On réaffiche les newPotars
 	    anx = classes.Annexes()
 	    anx.get_potars()
-	print("Apres Calibration: ", potars)
+	print("Potars apres Calibration: ", potars)
 	
     
      #####################

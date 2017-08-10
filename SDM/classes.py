@@ -26,9 +26,12 @@ buttonLength = 10 # Taille des boutons
 buttonColor = '#C0C0C0' # Couleur des boutons
 tailleBorder = 2 # borderwidth
 
+#valeurs globals pour gérer le graphe 
 valeurTop = 0
 valeurSmokeP = 0
 valeurConcentration = 0
+xdata, ydata, concData = [], [], []
+#valeurs globals pour gérer le tableau
 arraySmokeP = []
 arrayConcen = []
 smkP = []
@@ -120,7 +123,7 @@ class TerminalLog(threading.Thread):
 	fic.close()
 		
     def clignotant(self, val):
-	global arraySmokeP, arrayConcen, smkP, conc
+	global arraySmokeP, arrayConcen, smkP, conc, concData
 	val =  '{0:08b}'.format(int(val,16))[::-1]
 	if val[0] == '0':
 	    self.leds[0].create_oval(0,0,15,15, fill="grey")
@@ -153,7 +156,10 @@ class TerminalLog(threading.Thread):
 	    if len(arraySmokeP) == 1:
 		# on récupere la concentration et la valeur du smoke P pour Alarm Lav OFF
 		arraySmokeP.append(float(self.smokeP.get()))
-		arrayConcen.append(self.concen.get())
+		val = self.concen.get()
+		if val == '':
+		    val = concData[-1]
+		arrayConcen.append(val)
 		# On affiche les valeurs
 		self.widgets[2][1].configure(text=str(arraySmokeP[1]))
 		self.widgets[2][2].configure(text=str(arrayConcen[1]))
@@ -195,16 +201,19 @@ class TerminalLog(threading.Thread):
 	    #self.flag = 0
 	    val1 = self.smokeP.get()
 	    val2 = self.concen.get()
+	    val_conc = concData[-1]
 	    if len(arraySmokeP) == 0:
 		# on récupere la concentration et la valeur du smoke P pour Alarm Lav ON
 		arraySmokeP.append(float(val1))
-		arrayConcen.append(val2)
+		if val2 != '':
+		    val_conc = val2
+		arrayConcen.append(val_conc)
 		# On affiche les resultats dans le tableau
 		self.widgets[1][1].configure(text=str(arraySmokeP[0]))
 		self.widgets[1][2].configure(text=str(arrayConcen[0]))
 		
 	    
-	    if val2 != '' and float(val2) >= 1 and float(val2) <=1.4:
+	    if val2 != '' and  abs(float(val2)-float(arrayConcen[0])) <= 0.4:
 		conc.append(float(val2))
 		smkP.append(float(val1))
 		if len(smkP) == 100 :
@@ -299,8 +308,8 @@ class MonGraphe2(tk.Frame):
 	self.lineSmoke, = self.ax.plot([], [], 'r', lw=1)
 	self.lineConc, = self.ax.plot([], [], 'b', lw=1)
 	self.ax.grid()
-	self.ax.legend(["Concen","SmokeP"], loc="best", frameon=False, labelspacing=0)
-	self.xdata, self.ydata, self.concData = [], [], []
+	self.ax.legend(["SmokeP","Concen"], loc="best", frameon=False, labelspacing=0)
+	#self.xdata, self.ydata, self.concData = [], [], []
 	self.ani = animation.FuncAnimation(self.fig, self.run, self.data_gen, blit=False, interval=10,
                               repeat=False, init_func=self.init)
 
@@ -313,7 +322,7 @@ class MonGraphe2(tk.Frame):
 		    valeurSmokeP = float(self.fenSmokeP.get())
 		if self.fenConc.get() and self.fenConc.get() != "INF":
 		    valeurConcentration = float(self.fenConc.get())
-		yield t, valeurConcentration, valeurSmokeP 
+		yield t, valeurSmokeP, valeurConcentration
 	    except:
 		pass
 	    
@@ -322,22 +331,24 @@ class MonGraphe2(tk.Frame):
 
 
     def init(self):
+	global xdata, ydata, concData
 	self.ax.set_ylim(-1, 15)
 	self.ax.set_xlim(0, 10)
-	del self.xdata[:]
-	del self.ydata[:]
-	del self.concData[:]
-	self.lineSmoke.set_data(self.xdata, self.ydata)
-	self.lineConc.set_data(self.xdata, self.concData)
+	del xdata[:]
+	del ydata[:]
+	del concData[:]
+	self.lineSmoke.set_data(xdata, ydata)
+	self.lineConc.set_data(xdata, concData)
 	return self.lineSmoke,self.lineConc,
 
 
     def run(self,data):
+	global xdata, ydata, concData
 	# update the data
 	t, y, conc = data
-	self.xdata.append(t)
-	self.ydata.append(y)
-	self.concData.append(conc)
+	xdata.append(t)
+	ydata.append(y)
+	concData.append(conc)
 	self.xmin, self.xmax = self.ax.get_xlim()
 	self.ymin, self.ymax = self.ax.get_ylim()
 
@@ -347,16 +358,17 @@ class MonGraphe2(tk.Frame):
 	if y >= self.ymax:
 	    self.ax.set_ylim(self.ymin, 2*self.ymax)
 	    self.ax.figure.canvas.draw()
-	if self.ymax >= 100 and y <= 12:
-	    self.ax.set_ylim(self.ymin, 12)
+	if self.ymax >= 20 and y <= 15:
+	    self.ax.set_ylim(self.ymin, 15)
 	    self.ax.figure.canvas.draw()
-	self.lineSmoke.set_data(self.xdata, self.ydata)
-	self.lineConc.set_data(self.xdata, self.concData)
+	self.lineSmoke.set_data(xdata, ydata)
+	self.lineConc.set_data(xdata, concData)
 	
 
-
+	#print ("Concen:",concData)
 	return self.lineSmoke,self.lineConc,
 
+###################################################
 class Annexes:
     def __init__(self):
 	self.var = "OK"
@@ -369,6 +381,9 @@ class Annexes:
 	conc = []
 	arraySmokeP = []
 	arrayConcen = []
+	xdata = []
+	ydata = []
+	concData = []
 	
     def get_potars(self):
 	# on demande la valeur des potars
