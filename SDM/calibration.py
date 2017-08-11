@@ -56,10 +56,12 @@ class Calibration(Frame):
 	#création des  fenêtres
 	self.fenetre1 = Frame(self,bg=bgColor,borderwidth=tailleBorder,relief=GROOVE)
 	self.fenetre1.grid(padx=2,pady=2,row=0,column=0)
-	self.fenetre1_ = Frame(self,bg=bgColor,borderwidth=tailleBorder,relief=GROOVE)
-	self.fenetre1_.grid(padx=2,pady=2,row=1,column=0,sticky="n",)
+	self.fenetre1_1 = Frame(self,bg=bgColor,borderwidth=tailleBorder,relief=GROOVE)
+	self.fenetre1_1.grid(padx=2,pady=2,row=1,column=0,sticky="n",)
+	self.fenetre1_2 = Frame(self,bg=bgColor,borderwidth=tailleBorder,relief=GROOVE)
+	self.fenetre1_2.grid(padx=2,pady=2,row=2,column=0,sticky="n",)
 	self.fenetre2 = Frame(self,bg=bgColor,borderwidth=tailleBorder,relief=GROOVE)
-	self.fenetre2.grid(padx=2,pady=2,row=0,column=1,rowspan=2)
+	self.fenetre2.grid(padx=2,pady=2,row=0,column=1,rowspan=3)
 	
 	# création des widgets de chaque fenêtre
 	
@@ -74,7 +76,7 @@ class Calibration(Frame):
 	self.frame0.pack(pady=5)
 	self.labelConsigne = Label(self.frame0,text="Consignes", fg=fgColor, font=titreFont, bg=bgColor)
         self.labelConsigne.grid(row=0,column=0)
-	self.textConsigne = Text(self.frame0, height=25, width=60,font=("consolas",10))
+	self.textConsigne = Text(self.frame0, height=18, width=60,font=("consolas",10))
 	self.textConsigne.grid(row=1,column=0)
 	# le scrollbar 
 	self.scrollbar = Scrollbar(self.frame0, command=self.textConsigne.yview)
@@ -84,33 +86,37 @@ class Calibration(Frame):
 	# 
 	self.boutonContinuer=Button(self.fenetre1,text="Continuer",bd=2, width=30, relief=RAISED, overrelief=RIDGE, bg=buttonColor)
         self.boutonContinuer.pack(pady=5)
-	# La barre de progression
-	self.progressBar = ttk.Progressbar(self.fenetre1,orient="horizontal",length=500,mode="determinate")
-	self.progressBar.pack(pady=5)
-	###### Fêntre 1_ #########
+	
+	##### Fentre 1_1 ########
+	# La zone de notification
+	Label(self.fenetre1_1,text="Zone des notifications", fg=fgColor, font=titreFont, bg=bgColor).pack(pady=5)
+	self.notifZone = Text(self.fenetre1_1, height=6, width=60,font=("consolas",10)) 
+	self.notifZone.pack(pady=5)
+	###### Fêntre 1_2 #########
 	self._widgets = []
 	for row in range(6):
             current_row = []
             for column in range(3):
-                label = Label(self.fenetre1_, borderwidth=0, width=15)
+                label = Label(self.fenetre1_2, borderwidth=0, width=15)
                 label.grid(row=row, column=column, sticky="nsew", padx=1, pady=1)
                 current_row.append(label)
             self._widgets.append(current_row)
 
         for column in range(3):
             self.grid_columnconfigure(column, weight=3)
-	self._widgets[0][0].configure(font=fontSimple, bg="white")
-	self._widgets[0][1].configure(text="Smoke P", font=fontSimple, bg="white")
-	self._widgets[0][2].configure(text="Concentration", font=fontSimple, bg="white")
-	self._widgets[1][0].configure(text="Alarm Lav ON", font=fontSimple, bg="white")
-	self._widgets[2][0].configure(text="Alarm Lav OFF", font=fontSimple, bg="white")
-	self._widgets[3][0].configure(text="Moyenne", font=fontSimple, bg="white")
-	self._widgets[4][0].configure(text="Max", font=fontSimple, bg="white")
-	self._widgets[5][0].configure(text="Min", font=fontSimple, bg="white")
+	self._widgets[0][0].configure(font=('Helvetica', 12), bg="white")
+	self._widgets[0][1].configure(text="Smoke P", font=('Helvetica', 12), bg="white")
+	self._widgets[0][2].configure(text="Concentration", font=('Helvetica', 12), bg="white")
+	self._widgets[1][0].configure(text="Alarm Lav ON", font=('Helvetica', 10), bg="white")
+	self._widgets[2][0].configure(text="Alarm Lav OFF", font=('Helvetica', 10), bg="white")
+	self._widgets[3][0].configure(text="Moyenne", font=('Helvetica', 10), bg="white")
+	self._widgets[4][0].configure(text="Max", font=('Helvetica', 10), bg="white")
+	self._widgets[5][0].configure(text="Min", font=('Helvetica', 10), bg="white")
 	
 	# 
-	self.boutonClear=Button(self.fenetre1_,text="Clear ",bd=2, width=10, relief=RAISED, overrelief=RIDGE, bg=buttonColor, state = 'disabled',command=self.clear_table)
+	self.boutonClear=Button(self.fenetre1_2,text="Clear ",bd=2, width=10, relief=RAISED, overrelief=RIDGE, bg=buttonColor, state = 'disabled',command=self.clear_table)
         self.boutonClear.grid(row=6, column=1, sticky="nsew", padx=1, pady=15)
+	
 	
 	###### Fêntre 2 #########
 	self.frame1 = Frame(self.fenetre2,bg=bgColor) # sert à bien arranger les widgets de cette zone
@@ -314,7 +320,8 @@ class Calibration(Frame):
 			self.Concentration,
 			self._widgets,
 			self.boutonCalibrer,
-			self.boutonClear)
+			self.boutonClear,
+			self.notifZone)
 	    self.log0.start()
 	   
 	    #self.graphe1 = classes.MonGraphe(self.Top,fenetre_principale=self.canvas1)
@@ -370,14 +377,14 @@ class Calibration(Frame):
 		# On commence par augmenter pot2
 		val = 6*valeurPotarAdd
 		for i in range(val):
-		    if pot2 > 0x32 and pot2 < 0x96:
+		    if pot2 >= 0x32 and pot2 < 0x96:
 			pot2 += 1
 			valeurPotarAdd -=1
 		    else:
 			break
 		# Ensuite, on prend la valeur restante et on diminue pot3 
 		for i in range(3*valeurPotarAdd):
-		    if pot3 > 0x14 and pot3 < 0x5A:
+		    if pot3 > 0x14 and pot3 <= 0x5A:
 			pot3 -= 1
 		    else:
 			break
@@ -391,14 +398,14 @@ class Calibration(Frame):
 		# On commence par diminuer pot2
 		val = 6*valeurPotarAdd
 		for i in range(val):
-		    if pot2 > 0x32 and pot2 < 0x96:
+		    if pot2 > 0x32 and pot2 <= 0x96:
 			pot2 -= 1
 			valeurPotarAdd -=1
 		    else:
 			break
 		# Ensuite, on prend la valeur restante et on augmente pot3 
 		for i in range(3*valeurPotarAdd):
-		    if pot3 > 0x14 and pot3 < 0x5A:
+		    if pot3 >= 0x14 and pot3 < 0x5A:
 			pot3 += 1
 		    else:
 			break
@@ -407,29 +414,9 @@ class Calibration(Frame):
 	    potars[3] = pot3
 		
 	    ##### On ecrit ces nouvelles valeurs de potars dans le NVM
-	    bus = can.interface.Bus()
-	    #set
-	    msg1 = can.Message(arbitration_id=0x06103403,
-                      data=[0x17, 0x0e, potars[0], potars[1], potars[2], potars[3], 0x00, 0x00],
-                      extended_id=True)
-	    #clear
-	    msg2 = can.Message(arbitration_id=0x06103403,
-                      data=[0x17, 0x0e, potars[0], potars[1], potars[2], potars[3], 0x01, 0x01],
-                      extended_id=True)
-	   
-	    #Zero
-	    msg4 = can.Message(arbitration_id=0x06103403,
-                      data=[0x17, 0x0e, potars[0], potars[1], potars[2], potars[3], 0x00, 0x01],
-                      extended_id=True)
-	    try:
-		bus.send(msg1)
-		bus.send(msg2)
-		bus.send(msg4)
-	    except can.CanError:
-		print("Message NOT sent")
-	    
-	    # On réaffiche les newPotars
 	    anx = classes.Annexes()
+	    anx.set_potars(potars)
+	    # On réaffiche les newPotars
 	    anx.get_potars()
 	print("Potars apres Calibration: ", potars)
 	
@@ -443,6 +430,8 @@ class Calibration(Frame):
 	    self._widgets[i][2].configure(text="")
 	#On désactive le bouton calibrer
 	self.boutonCalibrer.configure(state='disabled')
+	# On efface les notifications
+	self.notifZone.delete('0.0',END)
     #######################################################
     
     

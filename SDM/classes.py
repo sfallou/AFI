@@ -36,9 +36,14 @@ arraySmokeP = []
 arrayConcen = []
 smkP = []
 conc = []
+# Les types de notifications
+notif1 = ["Test de fumée Terminé!\n","Les résultats sont affichés dans le tableau suivant.\nVeuillez vider complètement la fumée avant\nde calibrer si nécessaire."]
+notif2 = ["Données insuffisantes!\n","Pas assez d'acquisitions pour calculer\nconvenablement les valeurs moyennes.\nVeuillez remettre de la fumée"]		
+notif3 = ["Données suffisantes!\n","Vous pouvez videz doucement la fumée"]
+
 #####################################################
 class TerminalLog(threading.Thread):
-    def __init__(self,interface,terminal,leds,pots,backgrounds,top,bottom,smokeP,concen,widgets,Boutoncalib,Boutonclear):
+    def __init__(self,interface,terminal,leds,pots,backgrounds,top,bottom,smokeP,concen,widgets,Boutoncalib,Boutonclear,zoneNotifs):
         threading.Thread.__init__(self)
         self.interface = interface
 	self.terminal = terminal
@@ -54,8 +59,8 @@ class TerminalLog(threading.Thread):
 	self.widgets = widgets
 	self.BoutonCalib = Boutoncalib
 	self.BoutonClear = Boutonclear
-	#self.smkP = []
-	#self.conc = []
+	self.zoneNotifs = zoneNotifs
+	
 	self.SN = ""
 	self.PN = ""
 	
@@ -64,7 +69,10 @@ class TerminalLog(threading.Thread):
 	global arraySmokeP, arrayConcen, smkP, conc
         can_interface = self.interface
         bus = can.interface.Bus(can_interface, bustype='socketcan_ctypes')
-	
+	# apparence des notifs
+	self.zoneNotifs.tag_configure("Error",font=('Helvetica', 12, 'bold'), foreground='red')
+	self.zoneNotifs.tag_configure("Ready",font=('Helvetica', 12, 'bold'), foreground='blue')
+	self.zoneNotifs.tag_configure("Finish",font=('Helvetica', 12, 'bold'), foreground='green')
 	self.flag = 1
         while self.flag:
             message = bus.recv()
@@ -74,9 +82,12 @@ class TerminalLog(threading.Thread):
                 print(message)
                 info = str(message)+"\n"
 		if info[36:44] == "00400103":
-		    self.clignotant(info[65:67])
-		    self.parametres(info)
-		    self.terminal.insert('0.0', info)
+		    try:
+			self.clignotant(info[65:67])
+			self.parametres(info)
+			self.terminal.insert('0.0', info)
+		    except:
+			pass
 		    
 		elif info[36:44] == "0611e103":
 		    print(message)
@@ -91,10 +102,18 @@ class TerminalLog(threading.Thread):
 		   
 		    for i in range(4):
 			self.bgcks[i].delete(0,tk.END)
-		    self.bgcks[0].insert(0,info[65:70].replace(" ","").lstrip("0"))
-		    self.bgcks[1].insert(0,info[71:76].replace(" ","").lstrip("0"))
-		    self.bgcks[2].insert(0,info[77:82].replace(" ","").lstrip("0"))
-		    self.bgcks[3].insert(0,info[83:88].replace(" ","").lstrip("0"))
+		    val1 = info[65:70].replace(" ","").lstrip("0")
+		    val2 = info[71:76].replace(" ","").lstrip("0")
+		    val3 = info[77:82].replace(" ","").lstrip("0")
+		    val4 = info[83:88].replace(" ","").lstrip("0")
+		    if val3 == '':
+			val3 = '0'
+		    if val4 == '':
+			val4 = '0'
+		    self.bgcks[0].insert(0,val1)
+		    self.bgcks[1].insert(0,val2)
+		    self.bgcks[2].insert(0,val3)
+		    self.bgcks[3].insert(0,val4)
 		    
 		elif info[36:44] == "06125903":
 		    self.SN = info[65:88].replace(" ","").decode("hex")
@@ -103,6 +122,7 @@ class TerminalLog(threading.Thread):
 		    self.PN = info[65:76].replace(" ","")
 		#print("PN: ", self.PN)
 		#print("SN :", self.SN)
+		
 		
 		
 	
@@ -123,7 +143,7 @@ class TerminalLog(threading.Thread):
 	fic.close()
 		
     def clignotant(self, val):
-	global arraySmokeP, arrayConcen, smkP, conc, concData
+	global arraySmokeP, arrayConcen, smkP, conc, concData, notif1,notif1,notif3
 	val =  '{0:08b}'.format(int(val,16))[::-1]
 	if val[0] == '0':
 	    self.leds[0].create_oval(0,0,15,15, fill="grey")
@@ -189,13 +209,23 @@ class TerminalLog(threading.Thread):
 		    self.BoutonCalib.configure(state='normal')
 		    # On active le bouton clear
 		    self.BoutonClear.configure(state='normal')
-		    # on affiche une message d'information
-		    showinfo("Test de fumée Terminé","Les résultats sont affichés dans le tableau. Merci de vider complètement la fumée avant de calibrer si nécessaire.")
-		   
+		    # on affiche une notification
+		    self.zoneNotifs.delete(0.0,tk.END)
+		    self.zoneNotifs.insert(tk.INSERT,notif1[0])
+		    self.zoneNotifs.insert(tk.INSERT,notif1[1])
+		    self.zoneNotifs.tag_add("Finish",0.0,tk.END)
 		else:
-		    # on affiche une message d'information
-		    showerror("Données insuffisantes!","Pas assez d'acquisitions pour calculer convenablement les valeurs moyennes.Veuillez recommencer")
-		
+		    # on affiche une notification
+		    self.zoneNotifs.delete(0.0,tk.END)
+		    self.zoneNotifs.insert(tk.INSERT,notif2[0])
+		    self.zoneNotifs.insert(tk.INSERT,notif2[1])
+		    self.zoneNotifs.tag_add("Error",0.0,tk.END)
+		    # On enlève la derniere valeur de arraySmokeP pour n'avoir que len(arraySmokeP) = 1
+		    del arraySmokeP[-1]
+		    # On efface les valeurs du tableau
+		    self.widgets[2][1].configure(text="")
+		    self.widgets[2][2].configure(text="")
+		    
 	if val[6] == '1':
 	    self.leds[6].create_oval(0,0,15,15, fill="green2")
 	    #self.flag = 0
@@ -217,8 +247,12 @@ class TerminalLog(threading.Thread):
 		conc.append(float(val2))
 		smkP.append(float(val1))
 		if len(smkP) == 100 :
-		    # on affiche une message d'information
-		    showinfo("Données suffisantes!","Vous pouvez videz doucement la fumée")
+		    # on affiche une notification
+		    self.zoneNotifs.delete(0.0,tk.END)
+		    self.zoneNotifs.insert(tk.INSERT,notif3[0])
+		    self.zoneNotifs.insert(tk.INSERT,notif3[1])
+		    self.zoneNotifs.tag_add("Ready",0.0,tk.END)
+		    
 	    
 	if val[7] == '0':
 	    self.leds[7].create_oval(0,0,15,15, fill="grey")
@@ -416,10 +450,7 @@ class Annexes:
 	msg2 = can.Message(arbitration_id=0x06103403,
                       data=[0x17, 0x0e, pots[0], pots[1], pots[2], pots[3], 0x01, 0x01],
                       extended_id=True)
-	#clear
-	msg3 = can.Message(arbitration_id=0x06103403,
-                      data=[0x17, 0x0e, pots[0], pots[1], pots[2], pots[3], 0x01, 0x01],
-                      extended_id=True)
+	
 	#Zero
 	msg4 = can.Message(arbitration_id=0x06103403,
                       data=[0x17, 0x0e, pots[0], pots[1], pots[2], pots[3], 0x00, 0x01],
@@ -427,7 +458,6 @@ class Annexes:
 	try:
 	    bus.send(msg1)
 	    bus.send(msg2)
-	    bus.send(msg3)
 	    bus.send(msg4)
 	except can.CanError:
 	    print("Message NOT sent")
@@ -440,4 +470,4 @@ if __name__ == "__main__":
     root.configure(bg=bgColor)
     #graphe = MonGraphe(fenetre_principale=root)
     #graphe.mainloop()
-    
+ 

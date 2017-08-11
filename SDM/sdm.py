@@ -67,7 +67,7 @@ class SDM(Tk):
         self.calib_menu.grid(padx=2,row=0,column=3)
 	self.pab_menu = Button(self.FenetreMenu,text="PAB",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColorMenu,command=self.configuration)
         self.pab_menu.grid(padx=2,row=0,column=4)
-	self.autre_menu = Button(self.FenetreMenu,text="Autres",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColorMenu,command=self.autre)
+	self.autre_menu = Button(self.FenetreMenu,text="Options",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColorMenu,command=self.autre)
         self.autre_menu.grid(padx=2,row=0,column=5)
 	self.help_menu = Button(self.FenetreMenu,text="Help",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColorMenu,command=self.configuration)
         self.help_menu.grid(padx=2,row=0,column=6)

@@ -163,6 +163,8 @@ class Autres(Frame):
 	self.boutonClear=Button(self.fenetre2,text="Effacer",bd=2,width=15, relief=RAISED, overrelief=RIDGE, bg=buttonColor,command=self.effacer_logs)
         self.boutonClear.grid(padx=2, pady=2, row=4 ,column=0,columnspan=2)
 	
+	
+	
 	# On désactive certains bouttons au démarrage
 	
 	self.boutonUpdatePN.configure(state=DISABLED)
@@ -170,6 +172,37 @@ class Autres(Frame):
 	self.boutonUpdateDate.configure(state=DISABLED)
 	self.boutonWriteCaseMemoire.configure(state=DISABLED)
 	self.boutonReadCaseMemoire.configure(state=DISABLED)
+	
+	############# Options de calibrations #############
+	
+	self.frame5=LabelFrame(self,text="Options Calibration", fg=fgColor, font=titreFont, bg=bgColor)
+        self.frame5.grid(padx=2,pady=5,row=1,column=0,columnspan=2)
+        
+	#On affiche les potars
+	Label(self.frame5,text="POT1", fg=fgColor, font=fontSimple, bg=bgColor).grid(padx=2,pady=2,row=0,column=0)
+	self.POT1=Entry(self.frame5, font=fontSimple, width=entryLength)
+        self.POT1.grid(padx=2,pady=2, row=1 ,column=0)
+	Label(self.frame5,text="POT2", fg=fgColor, font=fontSimple, bg=bgColor).grid(padx=2,pady=2,row=0,column=1)
+	self.POT2=Entry(self.frame5, font=fontSimple, width=entryLength)
+        self.POT2.grid(padx=2,pady=2, row=1 ,column=1)
+	Label(self.frame5,text="POT3", fg=fgColor, font=fontSimple, bg=bgColor).grid(padx=2,pady=2,row=0,column=2)
+	self.POT3=Entry(self.frame5, font=fontSimple, width=entryLength)
+        self.POT3.grid(padx=2,pady=2, row=1 ,column=2)
+	Label(self.frame5,text="POT4", fg=fgColor, font=fontSimple, bg=bgColor).grid(padx=2,pady=2,row=0,column=3)
+	self.POT4=Entry(self.frame5, font=fontSimple, width=entryLength)
+        self.POT4.grid(padx=2,pady=2, row=1 ,column=3)
+	# Je mets les POTs dans une liste ordonnées pour les controler ensemble
+	self.POTs = [self.POT1,self.POT2,self.POT3,self.POT4]
+	#
+	self.boutonSetPOT=Button(self.frame5,text="Set",bd=2,width=15, relief=RAISED, overrelief=RIDGE, bg=buttonColor,command=self.set_potar)
+        self.boutonSetPOT.grid(padx=2, pady=2, row=1 ,column=4)
+	#
+	self.boutonClearPOT=Button(self.frame5,text="Clear",bd=2,width=15, relief=RAISED, overrelief=RIDGE, bg=buttonColor,command=self.clear_potar)
+        self.boutonClearPOT.grid(padx=2, pady=2, row=1 ,column=5)
+	#
+	self.boutonZeroPOT=Button(self.frame5,text="Zero",bd=2,width=15, relief=RAISED, overrelief=RIDGE, bg=buttonColor,command=self.zero_potar)
+        self.boutonZeroPOT.grid(padx=2, pady=2, row=1 ,column=6)
+	
     ####################################################
     def connexion(self):
 	res = self.open_dongle()
@@ -296,7 +329,23 @@ class Autres(Frame):
     def effacer_logs(self):
 	self.textLogs.delete(0.0,END)
     
+    #########################
+    def set_potar(self):
+	self.potars = []
+	for i in range(4):
+	    if self.POTs[i].get() != '':
+		self.potars.append(self.POTs[i].get())
+	    else:
+		pots = []
+		break
+	print self.potars
+    #########################
+    def clear_potar(self):
+	pass
     
+    #########################
+    def zero_potar(self):
+	pass
 ##############################################################################
 
 if __name__ == '__main__':
