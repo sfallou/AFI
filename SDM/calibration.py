@@ -2,6 +2,7 @@
 
 from Tkinter import *
 from tkMessageBox import *
+from PIL import ImageTk, Image
 import ttk
 import tkFileDialog
 import ics
@@ -62,6 +63,9 @@ class Calibration(Frame):
 	self.fenetre1_2.grid(padx=2,pady=2,row=2,column=0,sticky="n",)
 	self.fenetre2 = Frame(self,bg=bgColor,borderwidth=tailleBorder,relief=GROOVE)
 	self.fenetre2.grid(padx=2,pady=2,row=0,column=1,rowspan=3)
+	#Bouton quitter
+	self.fenP.panelExit.configure(command=self.quit)
+        
 	
 	# création des widgets de chaque fenêtre
 	
@@ -187,6 +191,7 @@ class Calibration(Frame):
 	# Le bouton "reference Reading"
 	self.boutonRefReading=Button(self.fenetre2,text="Reference Reading",bd=2, width=20, relief=RAISED, overrelief=RIDGE, bg=buttonColor, command=self.reference_reading)
         self.boutonRefReading.pack(pady=5)
+	
 	
 	
 	self.frame5 = Frame(self.fenetre2,bg=bgColor) # sert à bien arranger les labels et les entry pn, sn ...
@@ -476,8 +481,11 @@ class Calibration(Frame):
 	return O
     #######################################################
     def close_dongle(self):
-	self.log0.stop()
-	self.thread_conc.stop()
+	try:
+	    self.log0.stop()
+	    self.thread_conc.stop()
+	except:
+	    pass
 	# On arrete le processus setup
 	try:
 	    os.system('sudo pkill icsscand')

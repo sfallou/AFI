@@ -26,6 +26,7 @@ class SDM(Tk):
         Tk.__init__(self)
         self.title('Smoke Detector Maintenance')
         self.resizable(0, 0)
+	#self.wm_attributes('-type','splash')
         self.configure(bg=bgColor)
 	self.geometry("1170x800")
 	self.protocol("WM_DELETE_WINDOW", self.quit)
@@ -44,18 +45,31 @@ class SDM(Tk):
 	
     def menu(self):
         # creation du menu principale
-	self.FenetreMenu = Frame(self, bd =5, relief =RAISED, bg=bgColor)
-	self.FenetreMenu.pack(side=TOP)
+	self.zoneMenu = Frame(self, bd =5, relief =RAISED, bg=bgColor)
+	self.zoneMenu.pack(side=TOP)
+	self.FenetreMenu = Frame(self.zoneMenu, bd =5, relief =RAISED, bg=bgColor)
+	self.FenetreMenu.grid(ipadx=5,row=0, column=0)
+	
+	self.zoneQuitter = Frame(self.zoneMenu, bd =5, relief =RAISED, bg=bgColor)
+	self.zoneQuitter.grid(padx=1,row=0, column=1)
+	try:
+	    #self.imgExit = ImageTk.PhotoImage(Image.open("./docs/img/exit.png"))
+	    self.panelExit = Button(self.zoneQuitter, text="Close", bg="red", bd=1, width=5)
+	    self.panelExit.pack()
+	except:
+	    pass
 	################################
         #Logo à gauche entete
         ################################
         
-    
-	self.frameEntete0 = Frame(self.FenetreMenu, bg =bgColor)
-	self.frameEntete0.grid(row =0, column =0, padx =2)
-	self.logo0 = ImageTk.PhotoImage(Image.open("./docs/img/logo2.jpg"))
-	self.panel0 = Button(self.frameEntete0, image = self.logo0, bd=1,command=self.new)
-        self.panel0.pack( fill = "both", expand = "yes")
+	try:
+	    self.frameEntete0 = Frame(self.FenetreMenu, bg =bgColor)
+	    self.frameEntete0.grid(row =0, column =0, padx =2)
+	    self.logo0 = ImageTk.PhotoImage(Image.open("./docs/img/logo2.jpg"))
+	    self.panel0 = Button(self.frameEntete0, image = self.logo0, bd=1, command=self.new)
+	    self.panel0.pack( fill = "both", expand = "yes")
+	except:
+	    pass
 	################################
         #Menu
         ################################
@@ -73,7 +87,9 @@ class SDM(Tk):
         self.help_menu.grid(padx=2,row=0,column=6)
 	self.about_menu = Button(self.FenetreMenu,text="About",bd=2, width=9, relief=RAISED, overrelief=RIDGE, bg=buttonColorMenu,command=self.autre)
         self.about_menu.grid(padx=2,row=0,column=7)
-        ################################
+        
+	
+	################################
         #Logo à droite entete
         ################################
        

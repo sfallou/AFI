@@ -11,7 +11,7 @@ import os
 import time                    ## Time-related library
 import datetime
 import data
-
+import classes
 
 bgColor = 'light yellow' # Background color
 fgColor = "#03224C" 
@@ -334,18 +334,62 @@ class Autres(Frame):
 	self.potars = []
 	for i in range(4):
 	    if self.POTs[i].get() != '':
-		self.potars.append(self.POTs[i].get())
+		try:
+		    self.potars.append(int(self.POTs[i].get(),16))
+		except:
+		    showwarning("Mauvaise saisie","Les informations saisies ne sont pas conformes")
+	    
+	try:
+	    if len(self.potars) == 4:
+		bus = can.interface.Bus()
+		#set
+		msg1 = can.Message(arbitration_id=0x06103403,
+			data=[0x17, 0x0e, self.potars[0], self.potars[1], self.potars[2], self.potars[3], 0x00, 0x00],
+			extended_id=True)
+		bus.send(msg1)
+		
+		# On réaffiche les newPotars
+		self.anx = classes.Annexes()
+		self.anx.get_potars()
 	    else:
-		pots = []
-		break
-	print self.potars
+		showwarning("Mauvaise saisie","Les informations saisies ne sont pas conformes")
+	except can.CanError:
+	    print("Message NOT sent")
+	
+	
     #########################
     def clear_potar(self):
-	pass
+	try:
+	    if len(self.potars) == 4:
+		bus = can.interface.Bus()
+		#clear
+		msg2 = can.Message(arbitration_id=0x06103403,
+			data=[0x17, 0x0e, self.potars[0], self.potars[1], self.potars[2], self.potars[3], 0x01, 0x01],
+			extended_id=True)
+		bus.send(msg2)
+		# On réaffiche les newPotars
+		self.anx.get_potars()
+	    else:
+		showwarning("Mauvaise saisie","Les informations saisies ne sont pas conformes")
+	except can.CanError:
+	    print("Message NOT sent")
     
     #########################
     def zero_potar(self):
-	pass
+	try:
+	    if len(self.potars) == 4:
+		bus = can.interface.Bus()
+		#Zero
+		msg3 = can.Message(arbitration_id=0x06103403,
+			data=[0x17, 0x0e, self.potars[0], self.potars[1], self.potars[2], self.potars[3], 0x00, 0x01],
+			extended_id=True)
+		bus.send(msg3)
+		# On réaffiche les newPotars
+		self.anx.get_potars()
+	    else:
+		showwarning("Mauvaise saisie","Les informations saisies ne sont pas conformes")
+	except can.CanError:
+	    print("Message NOT sent")
 ##############################################################################
 
 if __name__ == '__main__':
