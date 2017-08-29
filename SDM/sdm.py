@@ -8,6 +8,8 @@ import configuration as conf
 import calibration as calib
 import autres as autr
 
+
+############################################
 bgColor = 'light yellow' # Background color
 fgColor = "#03224C" 
 WinWidth = 400 # largeur fenetre
@@ -19,7 +21,7 @@ buttonLength = 10 # Taille des boutons
 buttonColor = '#C0C0C0' # Couleur des boutons
 buttonColorMenu = 'steel blue' # Couleur des boutons du menu
 tailleBorder = 2 # borderwidth
-    
+##############################################    
 # la classe SDM (Smoke Detector Maintenance)
 class SDM(Tk):
     def __init__(self):

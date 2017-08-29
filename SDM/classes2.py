@@ -7,7 +7,7 @@ import time                    ## Time-related library
 import threading               ## Threading-based Timer library
 import sys
 import os
-
+import Queue
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -47,6 +47,11 @@ notif3 = ["Données suffisantes!\n","Vous pouvez videz doucement la fumée"]
 flag_terminal_log = 1
 flag_calib = 0
 flag_calib_log = 1
+###################
+
+q = Queue.Queue()
+can_interface = 'ics0can0'
+bus = can.interface.Bus(can_interface, bustype='socketcan_ctypes')
 #####################################################
 class TerminalLog(threading.Thread):
     def __init__(self,interface,terminal,leds,pots,backgrounds,top,bottom,smokeP,concen,widgets,Boutoncalib,Boutonclear,zoneNotifs,count):
@@ -60,8 +65,7 @@ class TerminalLog(threading.Thread):
 	self.bottom = bottom
 	self.smokeP = smokeP
 	self.concen = concen
-	#self.listSmokeP = []
-	#self.listConcen = []
+	
 	self.widgets = widgets
 	self.BoutonCalib = Boutoncalib
 	self.BoutonClear = Boutonclear
@@ -73,25 +77,53 @@ class TerminalLog(threading.Thread):
 	
 	
     def run(self):
-	global arraySmokeP, arrayConcen, smkP, conc, flag_terminal_log
-        can_interface = self.interface
-        bus = can.interface.Bus(can_interface, bustype='socketcan_ctypes')
+	global arraySmokeP, arrayConcen, smkP, conc, flag_terminal_log, q
+        
+	# on demande la valeur des potars
+	bus = can.interface.Bus()
+	msg = can.Message(arbitration_id=0x06103403,
+                      data=[0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+                      extended_id=True)
+	try:
+	    bus.send(msg)
+	except can.CanError:
+	    print("Message NOT sent")
+	
+	# on demande la valeur des backgrounds
+	bus = can.interface.Bus()
+	msg = can.Message(arbitration_id=0x06103403,
+                      data=[0x0a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+                      extended_id=True)
+	try:
+	    bus.send(msg)
+	except can.CanError:
+	    print("Message NOT sent")
+	
+	# On demande la valeur des PN et SN
+	bus = can.interface.Bus()
+	msg = can.Message(arbitration_id=0x06103403,
+		    data=[0x03, 0x00, 0x00, 0x00, 0xff, 0x7f, 0x00, 0x00],
+		    extended_id=True)
+	try:
+	    bus.send(msg)
+	except can.CanError:
+	    print("Message NOT sent")
+	    
 	# apparence des notifs
 	self.zoneNotifs.tag_configure("Error",font=('Helvetica', 12, 'bold'), foreground='red')
 	self.zoneNotifs.tag_configure("Ready",font=('Helvetica', 12, 'bold'), foreground='blue')
 	self.zoneNotifs.tag_configure("Finish",font=('Helvetica', 12, 'bold'), foreground='green')
+	
 	#self.flag = 1
         while flag_terminal_log:
-            message = bus.recv()
-            if message is None:
-                break   
-            else :		
+            message, fumee = q.get()
+            if message:	
                 print(message)
                 info = str(message)+"\n"
 		if info[36:44] == "00400103":
 		    try:
 			self.clignotant(info[65:67])
-			self.parametres(info)
+			self.parametres(info,fumee)
 			self.terminal.insert('0.0', info)
 		    except:
 			pass
@@ -127,14 +159,8 @@ class TerminalLog(threading.Thread):
 		    
 		elif info[36:44] == "06107903":
 		    self.PN = info[65:76].replace(" ","")
-		#print("PN: ", self.PN)
-		#print("SN :", self.SN)
-		
-		
-		
-	
-		
-    def parametres(self,msg):
+				
+    def parametres(self,msg,fumee):
 	global Tops, Bottoms
 	top = float(int(msg[77:82].replace(" ",""),16))/float(204)
 	bottom = float(int(msg[83:88].replace(" ",""),16))/float(204)
@@ -142,13 +168,14 @@ class TerminalLog(threading.Thread):
 	self.top.delete(0,tk.END)
 	self.bottom.delete(0,tk.END)
 	self.smokeP.delete(0,tk.END)
+	self.concen.delete(0,tk.END)
 	self.top.insert(0,round(top,3))
 	self.bottom.insert(0,round(bottom,3))
 	self.smokeP.insert(0,round(smokeP,3))
-	if self.concen.get() == '1.2':
+	self.concen.insert(0,fumee)
+	if fumee == 1.2:
 	    Tops.append(round(top,3))
 	    Bottoms.append(round(bottom,3))
-	
 	
     def clignotant(self, val):
 	global arraySmokeP, arrayConcen, smkP, conc, concData, notif1,notif1,notif3
@@ -272,106 +299,44 @@ class TerminalLog(threading.Thread):
 	#print ("Acquisition: ",len(conc))
 	self.EntryCount.delete(0,tk.END)
 	self.EntryCount.insert(tk.INSERT,len(conc))
-    
    
 	
     def stop(self):
 	flag_terminal_log = 0
 
-
-
+  
 ##############################################
 class CalibrationLog(threading.Thread):
-    def __init__(self,concen,potars,top,bottom):
+    def __init__(self,concen,potars):
         threading.Thread.__init__(self)
         self.concentration = concen
 	self.POTs = potars
-	self.EntryTop = top
-	self.EntryBottom = bottom
 
     def run(self):
-	global flag_calib_log
+	global flag_calib_log, q
+	self.queue_create()
+    
+    def stop(self):
+	flag_calib_log = 0
+	
+    def queue_create(self):
 	# On calcule le Zero de reference reading en determinant la constante de l'équation
 	os.system('sudo /usr/local/bin/natinst/rpi/aiondemand -c 0 -s 1 -t 1 -v | tee tmp.txt > tmp3.txt ')
 	file = open("tmp.txt","rb")
 	self.k = round(float(file.readlines()[-1].replace(",","")),4)
 	file.close()
-	# on demande la valeur des potars
-	bus = can.interface.Bus()
-	msg = can.Message(arbitration_id=0x06103403,
-                      data=[0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
-                      extended_id=True)
-	try:
-	    bus.send(msg)
-	except can.CanError:
-	    print("Message NOT sent")
-	
-	# on demande la valeur des backgrounds
-	bus = can.interface.Bus()
-	msg = can.Message(arbitration_id=0x06103403,
-                      data=[0x0a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
-                      extended_id=True)
-	try:
-	    bus.send(msg)
-	except can.CanError:
-	    print("Message NOT sent")
-	
-	# On demande la valeur des PN et SN
-	bus = can.interface.Bus()
-	msg = can.Message(arbitration_id=0x06103403,
-		    data=[0x03, 0x00, 0x00, 0x00, 0xff, 0x7f, 0x00, 0x00],
-		    extended_id=True)
-	try:
-	    bus.send(msg)
-	except can.CanError:
-	    print("Message NOT sent")
-	    
-        while flag_calib_log:
-	    os.system('sudo /usr/local/bin/natinst/rpi/aiondemand -c 0 -s 1 -t 1 -v | tee tmp.txt > tmp2.txt')
-	    file = open("tmp.txt","rb")
-	    resultat = float(file.readlines()[-1].replace(",",""))
-	    file.close()
-	    self.concentration.delete(0,tk.END)
-	    y = round(resultat,4)
-	    self.x = round(-(y-self.k)/0.0257,1)
-	    self.concentration.insert(0,self.x)
-	    if flag_calib:
-		self.calibration()
-		
-    def stop(self):
-	flag_calib_log = 0
-    	
-    def calibration(self):
-	# On commence à ajuster les potars
-	try:
-	    # On récupère la valeur de top et de bottom
-	    val1 = self.EntryTop.get() 
-	    val2 = self.EntryBottom.get()
-	    if self.x == 1.2 and val1 !='' and val2!='':
-		# Potars durants la calibration
-		potars = []
-		for p in self.POTs:
-		    potars.append(int(p.get(),16))
-		print potars
-		valTop = float(val1)
-		valBottom = float(val2)
-		ecart_top = round(self.top_voulu - valTop,3)
-		ecart_bottom = round(self.bottom_voulu - valBottom,3)
-		print("Ecart Top: ", ecart_top)
-		print("Ecart Bottom: ",ecart_bottom)
-	except:
-	    print("Error")
-	
-	
-    
-	potars = []
-	
-    def set_flag(self,top_voulu,bottom_voulu):
-	global flag_calib
-	self.top_voulu = top_voulu
-	self.bottom_voulu = bottom_voulu
-	flag_calib = 1
-	
+	while True:
+	    trame = bus.recv()
+	    if trame:
+		os.system('sudo /usr/local/bin/natinst/rpi/aiondemand -c 0 -s 1 -t 1 -v | tee tmp.txt > tmp2.txt')
+		file = open("tmp.txt","rb")
+		resultat = float(file.readlines()[-1].replace(",",""))
+		file.close()
+		#self.concentration.delete(0,tk.END)
+		y = round(resultat,4)
+		x = round(-(y-self.k)/0.0257,1)
+		q.put((trame,x))
+		#self.concentration.insert(0,round(x,1))
 ################################################
 class MonGraphe2(tk.Frame):
     def __init__(self,smkP,conc,fenetre_principale=None):
@@ -450,12 +415,14 @@ class MonGraphe2(tk.Frame):
 	#print ("Concen:",concData)
 	return self.lineSmoke,self.lineConc,
 
+
 ###################################################
 class Annexes:
     def __init__(self):
 	self.var = "OK"
 	
     def clear(self):
+	pass
 	global arraySmokeP, arrayConcen, smkP, conc
 	
 	# On reinitialise les listes à 0
@@ -466,6 +433,8 @@ class Annexes:
 	xdata = []
 	ydata = []
 	concData = []
+	Tops = []
+	Bottoms = []
 	
     def get_potars(self):
 	# on demande la valeur des potars
@@ -488,6 +457,7 @@ class Annexes:
 	except can.CanError:
 	    print("Message NOT sent")
     
+	
     def set_potars(self,pots):
 	bus = can.interface.Bus()
 	#set
