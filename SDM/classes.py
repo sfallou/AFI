@@ -290,11 +290,11 @@ class AjustementPotars(threading.Thread):
 	self.progressBar = progressBar
 	
     def run(self):
-	global flag_calib_log
+	global flag_calib_log, flag_calib
 	self.ecart_tops = []
 	self.ecart_bottoms = []
 	self.ok = 0
-	self.objetAnnexe = Annexes()
+	#self.objetAnnexe = Annexes()
 	while flag_calib_log:
 	    if flag_calib:
 		self.progressBar.start(10)
@@ -306,7 +306,7 @@ class AjustementPotars(threading.Thread):
 		    #self.ecart_tops = []
 		    #self.ecart_bottoms = []
 		"""
-	    elif self.ok:
+		if self.ok:
 		    #On fait set clear clear zero en s'assurant qu'il n'y a plus de fumée
 		    valConc = self.concentration.get
 		    if valConf != 0 and abs(float(valConf) - 0) <= 0.1:
@@ -317,6 +317,8 @@ class AjustementPotars(threading.Thread):
 			self.objetAnnexe.set_potars(potars)
 			self.objetAnnexe.get_potars()
 			self.ok = 0
+			flag_calib = 0
+			self.progressBar.stop()
 		    else:
 			print("Videz complètement la fumée !")
 		    
@@ -387,9 +389,9 @@ class AjustementPotars(threading.Thread):
 			    potars[3] = 0x14
 	    
 		else:
-		    flag_calib = 0
+		    #flag_calib = 0
 		    self.ok = 1
-		    self.progressBar.stop()
+		    #self.progressBar.stop()
 		
 		#print("Potars ajustés: ", potars)
 		
