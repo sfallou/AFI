@@ -294,7 +294,7 @@ class AjustementPotars(threading.Thread):
 	self.ecart_tops = []
 	self.ecart_bottoms = []
 	self.ok = 0
-	#self.objetAnnexe = Annexes()
+	self.objetAnnexe = Annexes()
 	while flag_calib_log:
 	    if flag_calib:
 		self.progressBar.start(10)
@@ -308,19 +308,20 @@ class AjustementPotars(threading.Thread):
 		"""
 		if self.ok:
 		    #On fait set clear clear zero en s'assurant qu'il n'y a plus de fumée
-		    valConc = self.concentration.get
-		    if valConf != 0 and abs(float(valConf) - 0) <= 0.1:
-			print "OK"
-			potars = []
-			for p in self.POTs:
-			    potars.append(int(p.get(),16))
-			self.objetAnnexe.set_potars(potars)
-			self.objetAnnexe.get_potars()
-			self.ok = 0
-			flag_calib = 0
-			self.progressBar.stop()
-		    else:
-			print("Videz complètement la fumée !")
+		    valConf = self.concentration.get()
+		    if valConf != '':
+			if abs(float(valConf) - 0) <= 0.1:
+			    print "OK"
+			    potars = []
+			    for p in self.POTs:
+				potars.append(int(p.get(),16))
+			    self.objetAnnexe.set_potars(potars)
+			    self.objetAnnexe.get_potars()
+			    self.ok = 0
+			    flag_calib = 0
+			    self.progressBar.stop()
+			else:
+			    print("Videz complètement la fumée !")
 		    
     	
     def calibration(self):
@@ -409,7 +410,7 @@ class AjustementPotars(threading.Thread):
 		
 	except:
 	    print("Error")
-	time.sleep(3)
+	time.sleep(1)
     
     """def calibration(self,ecart_top,ecart_bottom):
 	# On commence à ajuster les potars
@@ -651,7 +652,11 @@ class Annexes:
                       extended_id=True)
 	try:
 	    bus.send(msg1)
+	    time.sleep(0.5)
 	    bus.send(msg2)
+	    time.sleep(0.5)
+	    bus.send(msg2)
+	    time.sleep(0.5)
 	    bus.send(msg4)
 	except can.CanError:
 	    print("Message NOT sent")
