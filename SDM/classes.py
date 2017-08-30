@@ -192,7 +192,7 @@ class TerminalLog(threading.Thread):
 		self.widgets[2][1].configure(text=str(arraySmokeP[1]))
 		self.widgets[2][2].configure(text=str(arrayConcen[1]))
 		
-		if len(smkP) >= 30 :
+		if len(smkP) >= 50 :
 		    #self.flag = 0
 		    # On ajoute les valeurs moyennes
 		    arraySmokeP.append(round(np.mean(smkP),3))
@@ -251,10 +251,10 @@ class TerminalLog(threading.Thread):
 		self.widgets[1][2].configure(text=str(arrayConcen[0]))
 		
 	    
-	    if val2 != '' and  abs(float(val2)-float(arrayConcen[0])) <= 0.4:
+	    if val2 != '' and  abs(float(val2)-float(arrayConcen[0])) <= 0.2:
 		conc.append(float(val2))
 		smkP.append(float(val1))
-		if len(smkP) == 30 :
+		if len(smkP) == 50 :
 		    # on affiche une notification
 		    self.zoneNotifs.delete(0.0,tk.END)
 		    self.zoneNotifs.insert(tk.INSERT,notif3[0])
@@ -279,15 +279,159 @@ class TerminalLog(threading.Thread):
 	flag_terminal_log = 0
 
 
-
-##############################################
-class CalibrationLog(threading.Thread):
-    def __init__(self,concen,potars,top,bottom):
+#############################################
+class AjustementPotars(threading.Thread):
+    def __init__(self,concen,potars,top,bottom,progressBar):
         threading.Thread.__init__(self)
         self.concentration = concen
 	self.POTs = potars
 	self.EntryTop = top
 	self.EntryBottom = bottom
+	self.progressBar = progressBar
+	
+    def run(self):
+	global flag_calib_log
+	self.ecart_tops = []
+	self.ecart_bottoms = []
+	self.ok = 0
+	self.objetAnnexe = Annexes()
+	while flag_calib_log:
+	    if flag_calib:
+		self.progressBar.start(10)
+		self.calibration()
+		"""if len(self.ecart_tops) == 30:
+		    ecart1 = max(set(self.ecart_tops),key=self.ecart_tops.count)
+		    ecart2 = max(set(self.ecart_bottoms),key=self.ecart_bottoms.count)
+		    self.calibration(ecart1,ecart2)
+		    #self.ecart_tops = []
+		    #self.ecart_bottoms = []
+		"""
+	    elif self.ok:
+		    #On fait set clear clear zero en s'assurant qu'il n'y a plus de fumée
+		    valConc = self.concentration.get
+		    if valConf != 0 and abs(float(valConf) - 0) <= 0.1:
+			print "OK"
+			potars = []
+			for p in self.POTs:
+			    potars.append(int(p.get(),16))
+			self.objetAnnexe.set_potars(potars)
+			self.objetAnnexe.get_potars()
+			self.ok = 0
+		    else:
+			print("Videz complètement la fumée !")
+		    
+    	
+    def calibration(self):
+	global flag_calib
+	bus = can.interface.Bus()
+	try:
+	    # On récupère la valeur de top et de bottom
+	    val1 = self.EntryTop.get() 
+	    val2 = self.EntryBottom.get()
+	    val3 = self.concentration.get()
+	    if float(val3) == 1.2 and val1 !='' and val2!='':
+		# Potars durants la calibration
+		potars = []
+		for p in self.POTs:
+		    potars.append(int(p.get(),16))
+		print potars
+		valTop = float(val1)
+		valBottom = float(val2)
+		
+		"""ecart_top = round(self.top_voulu - valTop,3)
+		ecart_bottom = round(self.bottom_voulu - valBottom,3)
+		self.ecart_tops.append(ecart_top)
+		self.ecart_bottoms.append(ecart_bottom)
+		print("Ecart Tops: ", self.ecart_tops)
+		print("Ecart Bottoms: ",self.ecart_bottoms)
+		"""
+		# On règle l'ajustement des potars
+		if valBottom < self.bottom_voulu and (self.bottom_voulu - valBottom) > 0.005:
+		    if potars[2] < 0x96:
+			potars[2] += 1
+		    else:
+			if potars[0] < 0xA0:
+			    potars[0] += 1
+			else:
+			    potars[0] = 0x19
+			    potars[2] = 0x32
+		
+		elif valBottom > self.bottom_voulu and (valBottom - self.bottom_voulu) > 0.005:
+		    if potars[2] > 0x33:
+			potars[2] -= 1
+		    else:
+			if potars[0] > 0x20:
+			    potars[0] -= 1
+			else:
+			    potars[0] = 0x19
+			    potars[2] = 0x32
+			    
+		elif valTop < self.top_voulu and (self.top_voulu - valTop) > 0.05:
+		    if potars[1] < 0xA0:
+			potars[1] += 1
+		    else:
+			if potars[3] < 0x5A:
+			    potars[3] += 1
+			else:
+			    potars[1] = 0x19
+			    potars[3] = 0x14
+			    
+		elif valTop > self.top_voulu and (valTop - self.top_voulu) > 0.05:
+		    if potars[1] > 0x20:
+			potars[1] -= 1
+		    else:
+			if potars[3] > 0x15:
+			    potars[3] -= 1
+			else:
+			    potars[1] = 0x19
+			    potars[3] = 0x14
+	    
+		else:
+		    flag_calib = 0
+		    self.ok = 1
+		    self.progressBar.stop()
+		
+		#print("Potars ajustés: ", potars)
+		
+		#set potars
+		msg1 = can.Message(arbitration_id=0x06103403,
+                      data=[0x17, 0x0e, potars[0], potars[1], potars[2], potars[3], 0x00, 0x00],
+                      extended_id=True)
+		bus.send(msg1)
+		time.sleep(1)
+		# on demande la valeur des potars
+		msg = can.Message(arbitration_id=0x06103403,
+                      data=[0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+                      extended_id=True)
+		bus.send(msg)
+		
+	except:
+	    print("Error")
+	time.sleep(3)
+    
+    """def calibration(self,ecart_top,ecart_bottom):
+	# On commence à ajuster les potars
+	print("calibration")
+	print("ecart_top: ",ecart_top)
+	print("ecart_bottom: ",ecart_bottom)
+	self.ecart_tops = []
+	self.ecart_bottoms = []
+	potars = []
+    """
+	
+    def set_flag(self,top_voulu,bottom_voulu):
+	global flag_calib
+	self.top_voulu = top_voulu
+	self.bottom_voulu = bottom_voulu
+	flag_calib = 1
+	
+    
+##############################################
+class CalibrationLog(threading.Thread):
+    def __init__(self,concen):
+        threading.Thread.__init__(self)
+        self.concentration = concen
+	
 
     def run(self):
 	global flag_calib_log
@@ -335,13 +479,13 @@ class CalibrationLog(threading.Thread):
 	    y = round(resultat,4)
 	    self.x = round(-(y-self.k)/0.0257,1)
 	    self.concentration.insert(0,self.x)
-	    if flag_calib:
+	    """if flag_calib:
 		self.calibration()
-		
+	    """
     def stop(self):
 	flag_calib_log = 0
     	
-    def calibration(self):
+    """def calibration(self):
 	# On commence à ajuster les potars
 	try:
 	    # On récupère la valeur de top et de bottom
@@ -371,7 +515,7 @@ class CalibrationLog(threading.Thread):
 	self.top_voulu = top_voulu
 	self.bottom_voulu = bottom_voulu
 	flag_calib = 1
-	
+    """
 ################################################
 class MonGraphe2(tk.Frame):
     def __init__(self,smkP,conc,fenetre_principale=None):

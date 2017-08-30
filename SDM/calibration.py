@@ -74,7 +74,7 @@ class Calibration(Frame):
 	###### Fêntre 1 #########
 	
 	# 
-	self.boutonStartCalib=Button(self.fenetre1,text="Démarrer la calibration",bd=2, width=50, relief=RAISED, overrelief=RIDGE, bg=buttonColor, command=self.start_calib)
+	self.boutonStartCalib=Button(self.fenetre1,text="Start",bd=2, width=50, relief=RAISED, overrelief=RIDGE, bg=buttonColor, command=self.start_calib)
         self.boutonStartCalib.pack(pady=2)
 	
 	# Zone de Text pour les consignes à appliqué
@@ -327,9 +327,10 @@ class Calibration(Frame):
 	# Si res = 1, on lance le test et on affiche les trames CAN dans la zone logs ainsi que la progressBar
 	if res:
 	    self.Concentration.delete(0,END)
-	    self.thread_conc = classes.CalibrationLog(self.Concentration,self.POTs, self.Top, self.Bottom)
+	    self.thread_conc = classes.CalibrationLog(self.Concentration)
 	    self.thread_conc.start()
-	    
+	    self.thread_cal = classes.AjustementPotars(self.Concentration,self.POTs, self.Top, self.Bottom,self.pb)
+	    self.thread_cal.start()
 	    self.log0 = classes.TerminalLog('ics0can0',
 			self.textLogs,
 			self.Leds,
@@ -386,8 +387,9 @@ class Calibration(Frame):
 	    self.notifZone.tag_add("Done",0.0,END)
 	
 	    # On commence à ajuster les potars
-	    self.thread_conc.set_flag(top_second,bottom_second)
-	    self.pb.start(50)
+	    self.thread_cal.set_flag(top_second,bottom_second)
+	    # On désactive le bouton
+	    self.boutonCalibrer.configure(state='disabled')
 	else:
 	    showinfo("Test de fumée correcte","Selon les critères du CMM, le test de fumée est correct")
 	
