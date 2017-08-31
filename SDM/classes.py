@@ -192,7 +192,7 @@ class TerminalLog(threading.Thread):
 		self.widgets[2][1].configure(text=str(arraySmokeP[1]))
 		self.widgets[2][2].configure(text=str(arrayConcen[1]))
 		
-		if len(smkP) >= 50 :
+		if len(smkP) >= 30 :
 		    #self.flag = 0
 		    # On ajoute les valeurs moyennes
 		    arraySmokeP.append(round(np.mean(smkP),3))
@@ -254,7 +254,7 @@ class TerminalLog(threading.Thread):
 	    if val2 != '' and  abs(float(val2)-float(arrayConcen[0])) <= 0.2:
 		conc.append(float(val2))
 		smkP.append(float(val1))
-		if len(smkP) == 50 :
+		if len(smkP) == 30 :
 		    # on affiche une notification
 		    self.zoneNotifs.delete(0.0,tk.END)
 		    self.zoneNotifs.insert(tk.INSERT,notif3[0])
@@ -297,7 +297,7 @@ class AjustementPotars(threading.Thread):
 	self.objetAnnexe = Annexes()
 	while flag_calib_log:
 	    if flag_calib:
-		self.progressBar.start(10)
+		self.progressBar.start()
 		self.calibration()
 		"""if len(self.ecart_tops) == 30:
 		    ecart1 = max(set(self.ecart_tops),key=self.ecart_tops.count)
@@ -310,7 +310,7 @@ class AjustementPotars(threading.Thread):
 		    #On fait set clear clear zero en s'assurant qu'il n'y a plus de fumée
 		    valConf = self.concentration.get()
 		    if valConf != '':
-			if abs(float(valConf) - 0) <= 0.1:
+			if abs(float(valConf)) == 0.1 or abs(float(valConf)) == 0:
 			    print "OK"
 			    potars = []
 			    for p in self.POTs:
@@ -370,11 +370,12 @@ class AjustementPotars(threading.Thread):
 			    potars[2] = 0x32
 			    
 		elif valTop < self.top_voulu and (self.top_voulu - valTop) > 0.05:
-		    if potars[1] < 0xA0:
-			potars[1] += 1
+		    if potars[3] < 0x5A:
+			potars[3] += 1
+			    
 		    else:
-			if potars[3] < 0x5A:
-			    potars[3] += 1
+			if potars[1] < 0xA0:
+			    potars[1] += 1
 			else:
 			    potars[1] = 0x19
 			    potars[3] = 0x14

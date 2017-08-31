@@ -2,6 +2,6 @@
 Detected NI USB Devices
 ---------------------------------------------
 
-Found:		USB0::0x3923::0x717a::0197B7D0::RAW	(/dev/bus/usb/001/006)
+Found:		USB0::0x3923::0x717a::0197B7D0::RAW	(/dev/bus/usb/001/004)
 Confirm:	USB0::0x3923::0x717a::0197B7D0::RAW
-2.482906,
+2.480360,
