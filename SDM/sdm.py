@@ -30,7 +30,7 @@ class SDM(Tk):
         self.resizable(0, 0)
 	#self.wm_attributes('-type','splash')
         self.configure(bg=bgColor)
-	self.geometry("1170x800")
+	self.geometry("1170x870")
 	self.protocol("WM_DELETE_WINDOW", self.quit)
 	x = (self.winfo_screenwidth() - self.winfo_reqwidth())/50
 	y = (self.winfo_screenheight() - self.winfo_reqheight())/50

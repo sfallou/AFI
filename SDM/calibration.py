@@ -82,7 +82,7 @@ class Calibration(Frame):
 	self.frame0.pack(pady=5)
 	self.labelConsigne = Label(self.frame0,text="Consignes", fg=fgColor, font=titreFont, bg=bgColor)
         self.labelConsigne.grid(row=0,column=0)
-	self.textConsigne = Text(self.frame0, height=17, width=60,font=("consolas",10))
+	self.textConsigne = Text(self.frame0, height=17, width=65,font=("consolas",10))
 	self.textConsigne.grid(row=1,column=0)
 	# le scrollbar 
 	self.scrollbar = Scrollbar(self.frame0, command=self.textConsigne.yview)
@@ -96,7 +96,7 @@ class Calibration(Frame):
 	##### Fentre 1_1 ########
 	# La zone de notification
 	Label(self.fenetre1_1,text="Zone des notifications", fg=fgColor, font=titreFont, bg=bgColor).pack(pady=5)
-	self.notifZone = Text(self.fenetre1_1, height=6, width=60,font=("consolas",10)) 
+	self.notifZone = Text(self.fenetre1_1, height=10, width=65,font=("consolas",10)) 
 	self.notifZone.pack(pady=5)
 	
 	self.waitZone = Frame(self.fenetre1_1) 
@@ -104,7 +104,9 @@ class Calibration(Frame):
 	#self.canvasImg = Text(self.waitZone, bg=bgColor, fg="red", width=50, height=1)
 	#self.canvasImg.pack()
 	self.pb = ttk.Progressbar(self.waitZone, orient='horizontal', mode='indeterminate')
-	self.pb.pack(expand=True, fill="both", side="top")
+	self.pb.grid(row=0,column=0,sticky="nsew")
+	self.waitZoneText = Label(self.waitZone,text="", fg=fgColor, font=fontSimple, bg=bgColor)
+	self.pb.grid(row=0,column=1,sticky="nsew")
 	
 	###### Fêntre 1_2 #########
 	self._widgets = []
@@ -249,7 +251,7 @@ class Calibration(Frame):
 	# Zone de Text pour les logs
 	self.labelLogs = Label(self.frame10,text="Logs", fg=fgColor, font=titreFont, bg=bgColor)
         self.labelLogs.grid(row=0,column=0)
-	self.textLogs = Text(self.frame10, height=5, width=80,font=("consolas",10))
+	self.textLogs = Text(self.frame10, height=9, width=80,font=("consolas",10))
 	self.textLogs.grid(row=1,column=0)
 	# le scrollbar
 	self.scrollb = Scrollbar(self.frame10, command=self.textLogs.yview)
@@ -329,7 +331,16 @@ class Calibration(Frame):
 	    self.Concentration.delete(0,END)
 	    self.thread_conc = classes.CalibrationLog(self.Concentration)
 	    self.thread_conc.start()
-	    self.thread_cal = classes.AjustementPotars(self.Concentration,self.POTs, self.Top, self.Bottom,self.pb)
+	    #######
+	    self.thread_cal = classes.AjustementPotars(self.Concentration,
+			self.POTs, 
+			self.Top, 
+			self.Bottom,
+			self.pb,
+			self.notifZone,
+			self.waitZoneText,
+			self.boutonCalibrer)
+	    ########
 	    self.thread_cal.start()
 	    self.log0 = classes.TerminalLog('ics0can0',
 			self.textLogs,
@@ -363,33 +374,17 @@ class Calibration(Frame):
 	if smoke_alarm_lav_on  > 7 or smoke_alarm_lav_on < 5 or concen_alarm_lav_on > 1.4 or concen_alarm_lav_on < 1 :
 	    self.notifZone.tag_configure("Done",font=('Helvetica', 10, 'bold'), foreground='#03224C')
 	    #waiting signal
-	    self.waiting_signal()
+	    #self.waiting_signal()
 	    ###
-	    Tops = getattr(classes,"Tops")
-	    Bottoms = getattr(classes,"Bottoms")
-	    top_prim = float(max(set(Tops),key=Tops.count))
-	    bottom_prim = float(max(set(Bottoms),key=Bottoms.count))
-	    bottom_second = round(bottom_prim + ((0.2)/(0.03)) * (0.1 - bottom_prim),3)
-	    top_second = round(top_prim + ((0.1)/(0.3))*(0.6 - top_prim),3)
-	    msg0 = "Top voulu lors de la calibration : "+str(top_second)
-	    msg1 = "\nBottom voulu lors de la calibration : "+str(bottom_second)
-	    msg2 = "\n----------"
-	    msg3 = "\nTop avant calibration : "+str(top_prim)
-	    msg4 = "\nBottom  avant calibration : "+str(bottom_prim)
-	    ###
-	    # on affiche une notification
-	    self.notifZone.delete(0.0,END)
-	    self.notifZone.insert(INSERT,msg0)
-	    self.notifZone.insert(INSERT,msg1)
-	    self.notifZone.insert(INSERT,msg2)
-	    self.notifZone.insert(INSERT,msg3)
-	    self.notifZone.insert(INSERT,msg4)
-	    self.notifZone.tag_add("Done",0.0,END)
-	
-	    # On commence à ajuster les potars
-	    self.thread_cal.set_flag(top_second,bottom_second)
 	    # On désactive le bouton
 	    self.boutonCalibrer.configure(state='disabled')
+	    # on affiche une notification
+	    self.notifZone.delete(0.0,END)
+	    self.notifZone.insert(INSERT,"Maintenez la concentration de fumée à 1.2 jusqu'à la fin de la calib")
+	    self.notifZone.tag_add("Done",0.0,END)
+	    # On commence à ajuster les potars
+	    self.thread_cal.set_flag()
+	    
 	else:
 	    showinfo("Test de fumée correcte","Selon les critères du CMM, le test de fumée est correct")
 	

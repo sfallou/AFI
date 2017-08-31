@@ -60,12 +60,16 @@ class TerminalLog(threading.Thread):
 	self.bottom = bottom
 	self.smokeP = smokeP
 	self.concen = concen
+	#self.listSmokeP = []
+	#self.listConcen = []
 	self.widgets = widgets
 	self.BoutonCalib = Boutoncalib
 	self.BoutonClear = Boutonclear
 	self.zoneNotifs = zoneNotifs
 	self.EntryCount = count
 	
+	self.SN = ""
+	self.PN = ""
 	
 	
     def run(self):
@@ -123,14 +127,15 @@ class TerminalLog(threading.Thread):
 		    
 		elif info[36:44] == "06107903":
 		    self.PN = info[65:76].replace(" ","")
-		
+		#print("PN: ", self.PN)
+		#print("SN :", self.SN)
 		
 		
 		
 	
 		
     def parametres(self,msg):
-	global Tops, Bottoms, flag_calib
+	global Tops, Bottoms
 	top = float(int(msg[77:82].replace(" ",""),16))/float(204)
 	bottom = float(int(msg[83:88].replace(" ",""),16))/float(204)
 	smokeP = top/bottom
@@ -141,10 +146,8 @@ class TerminalLog(threading.Thread):
 	self.bottom.insert(0,round(bottom,3))
 	self.smokeP.insert(0,round(smokeP,3))
 	if self.concen.get() == '1.2':
-	    if flag_calib == 1:
-		if len(Tops) < 20:
-		    Tops.append(round(top,3))
-		    Bottoms.append(round(bottom,3))
+	    Tops.append(round(top,3))
+	    Bottoms.append(round(bottom,3))
 	
 	
     def clignotant(self, val):
@@ -246,8 +249,6 @@ class TerminalLog(threading.Thread):
 		# On affiche les resultats dans le tableau
 		self.widgets[1][1].configure(text=str(arraySmokeP[0]))
 		self.widgets[1][2].configure(text=str(arrayConcen[0]))
-		#if val_conc < 1 or val_conc > 1.4:
-		    
 		
 	    
 	    if val2 != '' and  abs(float(val2)-float(arrayConcen[0])) <= 0.2:
@@ -290,71 +291,48 @@ class AjustementPotars(threading.Thread):
 	self.zoneNotifs = zoneNotif
 	self.waitZone = waitZone
 	self.boutonCalibrer = boutonCal
-	#self.flag = 0
+	
     def run(self):
-	global flag_calib_log, flag_calib, Tops, Bottoms
+	global flag_calib_log, flag_calib
 	self.ecart_tops = []
 	self.ecart_bottoms = []
 	self.ok = 0
 	self.objetAnnexe = Annexes()
-	#while self.flag:
-	while flag_calib_log:
+	self.flag = 1
+	while flag_calib_log and self.flag:
 	    if flag_calib:
 		self.progressBar.start()
-		if len(Tops) < 20:
-		    pass
-		else:
-		    self.calibration()
-		    if self.ok:
-			#On fait set clear clear zero en s'assurant qu'il n'y a plus de fumée
-			valConf = self.concentration.get()
-			if valConf != '':
-			    if abs(float(valConf)) == 0.1 or abs(float(valConf)) == 0:
-				print "OK"
-				potars = []
-				for p in self.POTs:
-				    potars.append(int(p.get(),16))
-				self.objetAnnexe.set_potars(potars)
-				self.objetAnnexe.get_potars()
-				self.stop()
-				# On réactive le bouton
-				self.boutonCalibrer.configure(state='normal')
-				# on affiche une notification
-				self.zoneNotifs.delete(0.0,tk.END)
-				self.zoneNotifs.insert(tk.INSERT,"Calibration terminée !")
-				self.zoneNotifs.tag_add("Error",0.0,tk.END)
-				
-			    else:
-				#print("Videz complètement la fumée !")
-				# on affiche une notification
-				self.zoneNotifs.delete(0.0,tk.END)
-				self.zoneNotifs.insert(tk.INSERT,"Videz complètement la fumée !")
-				self.zoneNotifs.tag_add("Ready",0.0,tk.END)
+		self.calibration()
+		if self.ok:
+		    #On fait set clear clear zero en s'assurant qu'il n'y a plus de fumée
+		    valConf = self.concentration.get()
+		    if valConf != '':
+			if abs(float(valConf)) == 0.1 or abs(float(valConf)) == 0:
+			    print "OK"
+			    potars = []
+			    for p in self.POTs:
+				potars.append(int(p.get(),16))
+			    self.objetAnnexe.set_potars(potars)
+			    self.objetAnnexe.get_potars()
+			    self.stop()
+			    # On réactive le bouton
+			    self.boutonCalibrer.configure(state='normal')
+			    # on affiche une notification
+			    self.zoneNotifs.delete(0.0,tk.END)
+			    self.zoneNotifs.insert(tk.INSERT,"Calibration terminée !")
+			    self.zoneNotifs.tag_add("Error",0.0,tk.END)
+			    
+			else:
+			    #print("Videz complètement la fumée !")
+			    # on affiche une notification
+			    self.zoneNotifs.delete(0.0,tk.END)
+			    self.zoneNotifs.insert(tk.INSERT,"Videz complètement la fumée !")
+			    self.zoneNotifs.tag_add("Ready",0.0,tk.END)
 		    
     	
-    def calibration(self,):
-	global flag_calib, Tops, Bottoms
+    def calibration(self):
+	global flag_calib
 	bus = can.interface.Bus()
-	top_prim = float(max(set(Tops),key=Tops.count))
-	bottom_prim = float(max(set(Bottoms),key=Bottoms.count))
-	bottom_second = round(bottom_prim + ((0.2)/(0.03)) * (0.1 - bottom_prim),3)
-	top_second = round(top_prim + ((0.1)/(0.3))*(0.6 - top_prim),3)
-	msg0 = "Top voulu lors de la calibration : "+str(top_second)
-	msg1 = "\nBottom voulu lors de la calibration : "+str(bottom_second)
-	msg2 = "\n----------"
-	msg3 = "\nTop avant calibration : "+str(top_prim)
-	msg4 = "\nBottom  avant calibration : "+str(bottom_prim)
-	###
-	# on affiche une notification
-	#self.notifZone.delete(0.0,END)
-	self.zoneNotifs.insert(tk.INSERT,msg0)
-	self.zoneNotifs.insert(tk.INSERT,msg1)
-	self.zoneNotifs.insert(tk.INSERT,msg2)
-	self.zoneNotifs.insert(tk.INSERT,msg3)
-	self.zoneNotifs.insert(tk.INSERT,msg4)
-	self.zoneNotifs.tag_add("Done",0.0,tk.END)
-	self.top_voulu = top_second
-	self.bottom_voulu = bottom_second
 	try:
 	    # On récupère la valeur de top et de bottom
 	    val1 = self.EntryTop.get() 
@@ -390,7 +368,7 @@ class AjustementPotars(threading.Thread):
 			    potars[0] = 0x19
 			    potars[2] = 0x32
 			    
-		elif valTop < self.top_voulu and (self.top_voulu - valTop) > 0.01:
+		elif valTop < self.top_voulu and (self.top_voulu - valTop) > 0.05:
 		    if potars[3] < 0x5A:
 			potars[3] += 1
 			    
@@ -401,7 +379,7 @@ class AjustementPotars(threading.Thread):
 			    potars[1] = 0x19
 			    potars[3] = 0x14
 			    
-		elif valTop > self.top_voulu and (valTop - self.top_voulu) > 0.01:
+		elif valTop > self.top_voulu and (valTop - self.top_voulu) > 0.05:
 		    if potars[1] > 0x20:
 			potars[1] -= 1
 		    else:
@@ -436,16 +414,17 @@ class AjustementPotars(threading.Thread):
 	time.sleep(1)
     
 	
-    def set_flag(self):
+    def set_flag(self,top_voulu,bottom_voulu):
 	global flag_calib
+	self.top_voulu = top_voulu
+	self.bottom_voulu = bottom_voulu
 	flag_calib = 1
-	#self.flag = 1
+	self.flag = 1
 	
     def stop(self):
-	global flag_calib
 	self.ok = 0
 	flag_calib = 0
-	#self.flag = 0
+	self.flag = 0
 	self.progressBar.stop()
 	
 ##############################################
@@ -501,11 +480,43 @@ class CalibrationLog(threading.Thread):
 	    y = round(resultat,4)
 	    self.x = round(-(y-self.k)/0.0257,1)
 	    self.concentration.insert(0,self.x)
-	    
+	    """if flag_calib:
+		self.calibration()
+	    """
     def stop(self):
 	flag_calib_log = 0
     	
-  
+    """def calibration(self):
+	# On commence à ajuster les potars
+	try:
+	    # On récupère la valeur de top et de bottom
+	    val1 = self.EntryTop.get() 
+	    val2 = self.EntryBottom.get()
+	    if self.x == 1.2 and val1 !='' and val2!='':
+		# Potars durants la calibration
+		potars = []
+		for p in self.POTs:
+		    potars.append(int(p.get(),16))
+		print potars
+		valTop = float(val1)
+		valBottom = float(val2)
+		ecart_top = round(self.top_voulu - valTop,3)
+		ecart_bottom = round(self.bottom_voulu - valBottom,3)
+		print("Ecart Top: ", ecart_top)
+		print("Ecart Bottom: ",ecart_bottom)
+	except:
+	    print("Error")
+	
+	
+    
+	potars = []
+	
+    def set_flag(self,top_voulu,bottom_voulu):
+	global flag_calib
+	self.top_voulu = top_voulu
+	self.bottom_voulu = bottom_voulu
+	flag_calib = 1
+    """
 ################################################
 class MonGraphe2(tk.Frame):
     def __init__(self,smkP,conc,fenetre_principale=None):
