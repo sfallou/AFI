@@ -41,7 +41,7 @@ conc = []
 # Les types de notifications
 notif1 = ["Test de fumée Terminé!\n","Les résultats sont affichés dans le tableau suivant.\nVeuillez vider complètement la fumée avant\nde calibrer si nécessaire."]
 notif2 = ["Données insuffisantes!\n","Pas assez d'acquisitions pour calculer\nconvenablement les valeurs moyennes.\nVeuillez remettre de la fumée"]		
-notif3 = ["Données suffisantes!\n","Vous pouvez videz doucement la fumée"]
+notif3 = ["Données suffisantes!\n","Vous pouvez vider doucement la fumée"]
 
 # Les flags
 flag_terminal_log = 1
@@ -118,13 +118,14 @@ class TerminalLog(threading.Thread):
 		    self.bgcks[2].insert(0,val3)
 		    self.bgcks[3].insert(0,val4)
 		    
+		"""
 		elif info[36:44] == "06125903":
 		    self.SN = info[65:88].replace(" ","").decode("hex")
 		    
 		elif info[36:44] == "06107903":
 		    self.PN = info[65:76].replace(" ","")
 		
-		
+		"""
 		
 		
 	
@@ -140,12 +141,13 @@ class TerminalLog(threading.Thread):
 	self.top.insert(0,round(top,3))
 	self.bottom.insert(0,round(bottom,3))
 	self.smokeP.insert(0,round(smokeP,3))
-	if self.concen.get() == '1.2':
-	    if flag_calib == 1:
-		if len(Tops) < 20:
-		    Tops.append(round(top,3))
-		    Bottoms.append(round(bottom,3))
-	
+	if flag_calib == 1 and self.concen.get() == '1.2':
+	    #if flag_calib == 1:
+	    if len(Tops) < 20:
+		Tops.append(round(top,3))
+		Bottoms.append(round(bottom,3))
+    
+	print ("Tops: ", len(Tops))
 	
     def clignotant(self, val):
 	global arraySmokeP, arrayConcen, smkP, conc, concData, notif1,notif1,notif3
@@ -246,6 +248,8 @@ class TerminalLog(threading.Thread):
 		# On affiche les resultats dans le tableau
 		self.widgets[1][1].configure(text=str(arraySmokeP[0]))
 		self.widgets[1][2].configure(text=str(arrayConcen[0]))
+		# On active le bouton calibrer
+		#self.BoutonCalib.configure(state='normal')
 		#if val_conc < 1 or val_conc > 1.4:
 		    
 		
@@ -266,9 +270,6 @@ class TerminalLog(threading.Thread):
 	if val[7] == '1':
 	    self.leds[7].create_oval(0,0,15,15, fill="green2")
 	    
-	#print arraySmokeP
-	#print arrayConcen
-	#print ("Acquisition: ",len(conc))
 	self.EntryCount.delete(0,tk.END)
 	self.EntryCount.insert(tk.INSERT,len(conc))
     
@@ -317,6 +318,7 @@ class AjustementPotars(threading.Thread):
 				self.objetAnnexe.set_potars(potars)
 				self.objetAnnexe.get_potars()
 				self.stop()
+				time.sleep(5)
 				# On réactive le bouton
 				self.boutonCalibrer.configure(state='normal')
 				# on affiche une notification
@@ -339,22 +341,24 @@ class AjustementPotars(threading.Thread):
 	bottom_prim = float(max(set(Bottoms),key=Bottoms.count))
 	bottom_second = round(bottom_prim + ((0.2)/(0.03)) * (0.1 - bottom_prim),3)
 	top_second = round(top_prim + ((0.1)/(0.3))*(0.6 - top_prim),3)
-	msg0 = "Top voulu lors de la calibration : "+str(top_second)
-	msg1 = "\nBottom voulu lors de la calibration : "+str(bottom_second)
+	msg0 = "\nTop prévu après la calibration : "+str(top_second)+" +/- 0.01"
+	msg1 = "\nBottom prévu après la calibration : "+str(bottom_second)+" +/- 0.005"
 	msg2 = "\n----------"
 	msg3 = "\nTop avant calibration : "+str(top_prim)
 	msg4 = "\nBottom  avant calibration : "+str(bottom_prim)
 	###
 	# on affiche une notification
-	#self.notifZone.delete(0.0,END)
-	self.zoneNotifs.insert(tk.INSERT,msg0)
-	self.zoneNotifs.insert(tk.INSERT,msg1)
-	self.zoneNotifs.insert(tk.INSERT,msg2)
-	self.zoneNotifs.insert(tk.INSERT,msg3)
-	self.zoneNotifs.insert(tk.INSERT,msg4)
-	self.zoneNotifs.tag_add("Done",0.0,tk.END)
-	self.top_voulu = top_second
-	self.bottom_voulu = bottom_second
+	if not self.ok:
+	    self.zoneNotifs.delete(0.0,tk.END)
+	    self.zoneNotifs.insert(tk.INSERT,"Maintenez la concentration de fumée à 1.2 jusqu'à la fin de la calib\n")
+	    self.zoneNotifs.insert(tk.INSERT,msg0)
+	    self.zoneNotifs.insert(tk.INSERT,msg1)
+	    self.zoneNotifs.insert(tk.INSERT,msg2)
+	    self.zoneNotifs.insert(tk.INSERT,msg3)
+	    self.zoneNotifs.insert(tk.INSERT,msg4)
+	    self.zoneNotifs.tag_add("Done",0.0,tk.END)
+	    self.top_voulu = top_second
+	    self.bottom_voulu = bottom_second
 	try:
 	    # On récupère la valeur de top et de bottom
 	    val1 = self.EntryTop.get() 
@@ -381,10 +385,10 @@ class AjustementPotars(threading.Thread):
 			    potars[2] = 0x32
 		
 		elif valBottom > self.bottom_voulu and (valBottom - self.bottom_voulu) > 0.005:
-		    if potars[2] > 0x33:
+		    if potars[2] > 0x32:
 			potars[2] -= 1
 		    else:
-			if potars[0] > 0x20:
+			if potars[0] > 0x19:
 			    potars[0] -= 1
 			else:
 			    potars[0] = 0x19
@@ -402,10 +406,10 @@ class AjustementPotars(threading.Thread):
 			    potars[3] = 0x14
 			    
 		elif valTop > self.top_voulu and (valTop - self.top_voulu) > 0.01:
-		    if potars[1] > 0x20:
+		    if potars[1] > 0x19:
 			potars[1] -= 1
 		    else:
-			if potars[3] > 0x15:
+			if potars[3] > 0x14:
 			    potars[3] -= 1
 			else:
 			    potars[1] = 0x19
@@ -423,7 +427,7 @@ class AjustementPotars(threading.Thread):
                       data=[0x17, 0x0e, potars[0], potars[1], potars[2], potars[3], 0x00, 0x00],
                       extended_id=True)
 		bus.send(msg1)
-		time.sleep(1)
+		time.sleep(0.5)
 		# on demande la valeur des potars
 		msg = can.Message(arbitration_id=0x06103403,
                       data=[0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
