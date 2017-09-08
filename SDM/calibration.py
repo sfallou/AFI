@@ -163,42 +163,42 @@ class Calibration(Frame):
         self.Concentration.grid(padx=2,pady=2, row=3 ,column=1)
 	#On affiche les LEDs (Alarm Status)
 	self.Led7 = Canvas(self.frame1_2, width=20,heigh=18, bg=bgColor, bd=0, highlightthickness=0)
-	self.Led7.create_oval(0,0,15,15, fill="grey")
+	self.Led7.create_oval(0,0,15,15, fill="grey", tags="light")
         self.Led7.grid(padx=2,pady=2, row=0 ,column=0)
 	Label(self.frame1_2,text="Alarm Mid/High", fg=fgColor, font=fontSimple, bg=bgColor).grid(padx=2,pady=2,row=0,column=1,sticky="nsew")
 	
 	self.Led6 = Canvas(self.frame1_2, width=20,heigh=18, bg=bgColor, bd=0, highlightthickness=0)
-	self.Led6.create_oval(0,0,15,15, fill="grey")
+	self.Led6.create_oval(0,0,15,15, fill="grey", tags="light")
         self.Led6.grid(padx=2,pady=2, row=1 ,column=0)
 	Label(self.frame1_2,text="Lavatory Alarm", fg="red", font=fontSimple, bg=bgColor).grid(padx=2,pady=2,row=1,column=1,sticky="nsew")
 	
 	self.Led5 = Canvas(self.frame1_2, width=20,heigh=18, bg=bgColor, bd=0, highlightthickness=0)
-	self.Led5.create_oval(0,0,15,15, fill="grey")
+	self.Led5.create_oval(0,0,15,15, fill="grey", tags="light")
         self.Led5.grid(padx=2,pady=2, row=2 ,column=0)
 	Label(self.frame1_2,text="Alarm Low", fg=fgColor, font=fontSimple, bg=bgColor).grid(padx=2,pady=2,row=2,column=1,sticky="nsew")
 	
 	self.Led4 = Canvas(self.frame1_2, width=20,heigh=18, bg=bgColor, bd=0, highlightthickness=0)
-	self.Led4.create_oval(0,0,15,15, fill="grey")
+	self.Led4.create_oval(0,0,15,15, fill="grey", tags="light")
         self.Led4.grid(padx=2,pady=2, row=3 ,column=0)
 	Label(self.frame1_2,text="Pre Alarm", fg=fgColor, font=fontSimple, bg=bgColor).grid(padx=2,pady=2,row=3,column=1,sticky="nsew")
 	
 	self.Led3 = Canvas(self.frame1_3, width=20,heigh=18, bg=bgColor, bd=0, highlightthickness=0)
-	self.Led3.create_oval(0,0,15,15, fill="grey")
+	self.Led3.create_oval(0,0,15,15, fill="grey", tags="light")
         self.Led3.grid(padx=2,pady=2, row=0 ,column=0)
 	Label(self.frame1_3,text="Temperature Alarm", fg=fgColor, font=fontSimple, bg=bgColor).grid(padx=2,pady=2,row=0,column=1,sticky="nsew")
 	
 	self.Led2 = Canvas(self.frame1_3, width=20,heigh=18, bg=bgColor, bd=0, highlightthickness=0)
-	self.Led2.create_oval(0,0,15,15, fill="grey")
+	self.Led2.create_oval(0,0,15,15, fill="grey", tags="light")
         self.Led2.grid(padx=2,pady=2, row=1 ,column=0)
 	Label(self.frame1_3,text="Event 1", fg=fgColor, font=fontSimple, bg=bgColor).grid(padx=2,pady=2,row=1,column=1,sticky="nsew")
 	
 	self.Led1 = Canvas(self.frame1_3, width=20,heigh=18, bg=bgColor, bd=0, highlightthickness=0)
-	self.Led1.create_oval(0,0,15,15, fill="grey")
+	self.Led1.create_oval(0,0,15,15, fill="grey", tags="light")
         self.Led1.grid(padx=2,pady=2, row=2 ,column=0)
 	Label(self.frame1_3,text="Event 2", fg=fgColor, font=fontSimple, bg=bgColor).grid(padx=2,pady=2,row=2,column=1,sticky="nsew")
 	
 	self.Led0 = Canvas(self.frame1_3, width=20,heigh=18, bg=bgColor, bd=0, highlightthickness=0)
-	self.Led0.create_oval(0,0,15,15, fill="grey")
+	self.Led0.create_oval(0,0,15,15, fill="grey", tags="light")
         self.Led0.grid(padx=2,pady=2, row=3 ,column=0)
 	Label(self.frame1_3,text="Babble", fg=fgColor, font=fontSimple, bg=bgColor).grid(padx=2,pady=2,row=3,column=1,sticky="nsew")
 	
@@ -339,7 +339,8 @@ class Calibration(Frame):
 			self.pb,
 			self.notifZone,
 			self.waitZoneText,
-			self.boutonCalibrer)
+			self.boutonCalibrer,
+			self._widgets)
 	    ########
 	    self.thread_cal.start()
 	    self.log0 = classes.TerminalLog('ics0can0',
@@ -371,23 +372,21 @@ class Calibration(Frame):
 	concentration_moyenne = round(float(self._widgets[3][2].cget("text")),1)
 	smoke_alarm_lav_on = round(float(self._widgets[1][1].cget("text")),1)
 	concen_alarm_lav_on = round(float(self._widgets[1][2].cget("text")),1)
-	if smoke_alarm_lav_on  > 7 or smoke_alarm_lav_on < 5 or concen_alarm_lav_on > 1.4 or concen_alarm_lav_on < 1 :
-	    self.notifZone.tag_configure("Done",font=('Helvetica', 10, 'bold'), foreground='#03224C')
-	    #waiting signal
-	    #self.waiting_signal()
-	    ###
-	    # On désactive le bouton
-	    self.boutonCalibrer.configure(state='disabled')
-	    # on affiche une notification
-	    self.notifZone.delete(0.0,END)
-	    self.notifZone.insert(INSERT,"Maintenez la concentration de fumée à 1.2 jusqu'à la fin de la calib")
-	    self.notifZone.tag_add("Done",0.0,END)
-	    # On commence à ajuster les potars
-	    self.thread_cal.set_flag()
-	    
-	else:
-	    showinfo("Test de fumée correcte","Selon les critères du CMM, le test de fumée est correct")
-	
+	flag = True 
+	self.notifZone.tag_configure("Done",font=('Helvetica', 10, 'bold'), foreground='#03224C')
+	if smoke_alarm_lav_on  <= 7 and smoke_alarm_lav_on >= 5 and concen_alarm_lav_on <= 1.4 and concen_alarm_lav_on >= 1 :
+	    result = askquestion("Test de fumée correcte","Selon les critères du CMM, le test de fumée est correct. Êtes-vous sûr de vouloir calibrer ?", icon='warning')
+	    if result == 'yes':
+		flag = True
+	    else:
+		flag = False
+	if flag:
+		
+		# On désactive le bouton
+		self.boutonCalibrer.configure(state='disabled')
+		# on affiche une notification
+		# On commence à ajuster les potars
+		self.thread_cal.set_flag()
      #####################
     def clear_table(self):
 	self.annexe = classes.Annexes()
