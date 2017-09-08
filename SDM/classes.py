@@ -184,7 +184,7 @@ class TerminalLog(threading.Thread):
 		# On active le bouton calibrer
 		#self.BoutonCalib.configure(state='normal')
 		
-	    if val2 != '' and  abs(float(val2)-float(arrayConcen[0])) <= 0.2 and len(smkP) < 5:
+	    if val2 != '' and  abs(float(val2)-float(arrayConcen[0])) <= 0.2 and len(smkP) < 10:
 		conc.append(float(val2))
 		smkP.append(float(val1))
 	    else:
@@ -208,7 +208,7 @@ class TerminalLog(threading.Thread):
 		self.widgets[2][1].configure(text=str(arraySmokeP[1]))
 		self.widgets[2][2].configure(text=str(arrayConcen[1]))
 		self.zoneNotifs.delete(0.0,tk.END)
-		if len(smkP) == 5 :
+		if len(smkP) == 10 :
 		    # On ajoute les valeurs moyennes
 		    arraySmokeP.append(round(np.mean(smkP),3))
 		    arrayConcen.append(round(np.mean(conc),3))
@@ -278,6 +278,7 @@ class AjustementPotars(threading.Thread):
 	self.flag = 0
 	self.bottoms_temp = []
 	self.tops_temp = []
+	self.tops = []
     def run(self):
 	global flag_calib_log, flag_calib, arrayConcen
 	
@@ -288,30 +289,12 @@ class AjustementPotars(threading.Thread):
 	#while self.flag:
 	while flag_calib_log:
 	    if flag_calib:
-		print("arrayConcen:", len(arrayConcen))
+		print("tops:", len(self.tops))
 		print("bottoms_tmp:", len(self.bottoms_temp))
 		print("tops_tmp:", len(self.tops_temp))
-		#self.objetAnnexe.silence()
-		# bar de progression démarrée
 		self.progressBar.start()
-		# On initialise les potars 19 19 32 14
-		if self.flag == 0:
-		    self.notification(2) # on demande de vider la fumée complètement
-		    #On fait set clear clear zero en s'assurant qu'il n'y a plus de fumée
-		    valConf = self.concentration.get()
-		    if valConf != '':
-			if abs(float(valConf)) == 0.1 or abs(float(valConf)) == 0:
-			    potars = [0x19,0x19,0x32,0x14]
-			    self.objetAnnexe.set_potars(potars)
-			    self.objetAnnexe.get_potars()
-			    self.objetAnnexe.clear()
-			    for i in range(1,6):
-				self.tableau[i][1].configure(text="")
-				self.tableau[i][2].configure(text="")
-			    self.flag = 1
-			    
 		# on demande de mettre de la fumée	
-		elif self.flag == 1:
+		if self.flag == 1:
 		    if len(arrayConcen) >= 1:
 			self.flag = 2
 		    else:
@@ -320,71 +303,124 @@ class AjustementPotars(threading.Thread):
 			
 		elif self.flag == 2:
 		    self.notification(1) # on demande de fixer la concentration à 1.2
-		    if 1:#try:
+		    try:
 			# On récupère la valeur de top et de bottom
-			val1 = self.EntryTop.get() 
+			val1 = self.EntryTop.get()
 			val2 = self.EntryBottom.get()
 			val3 = self.concentration.get()
 			if len(self.bottoms_temp) < 10:
 			    try:
-				if float(val3) == 1.2 and val2!='':
+				if float(val3) == 1.2 and float(val2)!=0 and float(val1)!=0:
 				    self.bottoms_temp.append(float(val2))
+				    self.tops.append(float(val1))
 			    except:
 				pass
 			else:
+			    self.pot0 = self.POTs[0].get() 
+			    self.pot1 = self.POTs[1].get() 
 			    # on récupère bottom_prim
-			    bottom_prim = float(max(set(self.bottoms_temp),key=self.bottoms_temp.count))
+			    #bottom_prim = float(max(set(self.bottoms_temp),key=self.bottoms_temp.count))
 			    #print("bottom_prim: ",bottom_prim)
 			    # on set pot0 et pot1
-			    pot0 = 20 * float(arrayConcen[0])
-			    pot0 = int(str(int(pot0)),16)
-			    potars = [pot0,pot0,0x32,0x14]
-			    #print("potars: ",potars)
-			    self.objetAnnexe.set_potars(potars)
-			    self.objetAnnexe.get_potars()
-			pot = self.POTs[0].get() 
-			if len(self.tops_temp) < 10:
-			    try:
-				if float(val3) == 1.2 and int(pot,16) == pot0:
-				    self.tops_temp.append(float(val1))
-			    except:
-				pass
-				    
-			elif len(self.tops_temp) == 10:
-			    
-			    # on récupère top_second
-			    top_second = float(max(set(self.tops_temp),key=self.tops_temp.count))
-			    bottom_second = round(6.5 * (top_second/6 - top_second) + top_second,3)
-			    msg0 = "\nTop prévu après la calibration : "+str(top_second)+" +/- 0.01"
-			    msg1 = "\nBottom prévu après la calibration : "+str(bottom_second)+" +/- 0.005"
-			    msg2 = "\n----------"
-			    #msg3 = "\nTop avant calibration : "+str(top_prim)
-			    #msg4 = "\nBottom  avant calibration : "+str(bottom_prim)
-			    #print("bottoms_second:", bottom_second)
-			    ###
-			    # on affiche une notification
-			    if not self.ok:
-				self.zoneNotifs.delete(0.0,tk.END)
-				self.zoneNotifs.insert(tk.INSERT,"Maintenez la concentration de fumée à 1.2 jusqu'à la fin de la calib\n")
-				self.zoneNotifs.insert(tk.INSERT,msg2)
-				self.zoneNotifs.insert(tk.INSERT,msg0)
-				self.zoneNotifs.insert(tk.INSERT,msg1)
-				#self.zoneNotifs.insert(tk.INSERT,msg3)
-				#self.zoneNotifs.insert(tk.INSERT,msg4)
-				self.zoneNotifs.tag_add("Done",0.0,tk.END)
-				self.top_voulu = top_second
-				self.bottom_voulu = bottom_second
-			    self.flag = 3
-		    else:#except:
-			print("error")
-		
-		
+			    if self.pot0 !='' and self.pot1 !='':
+				if float(arrayConcen[0]) > 1.4:
+				    #pot0 = 20 * float(arrayConcen[0])
+				    #pot0 = int(str(int(pot0)),16)
+				    #pot1 = pot0
+				    self.algo = 2
+				
+				else:
+				    #pot0 = int(pot0,16)
+				    #pot1 = int(pot1,16)
+				    self.algo = 1
+				self.flag = 3
+		    except:
+			print("error recup bottom_prim")
 			
+		elif self.flag == 3:
+		    if self.algo == 1:
+			if self.ok == 0:
+			    self.calibration_1()
+			else:
+			    #On fait set clear clear zero en s'assurant qu'il n'y a plus de fumée
+			    valConf = self.concentration.get()
+			    if valConf != '':
+				if abs(float(valConf)) == 0.1 or abs(float(valConf)) == 0:
+				    print "OK"
+				    potars = []
+				    for p in self.POTs:
+					potars.append(int(p.get(),16))
+				    self.objetAnnexe.set_potars(potars)
+				    self.objetAnnexe.get_potars()
+				    self.stop()
+				    time.sleep(5)
+				    # On réactive le bouton
+				    self.boutonCalibrer.configure(state='normal')
+				    # on affiche une notification
+				    self.zoneNotifs.delete(0.0,tk.END)
+				    self.zoneNotifs.insert(tk.INSERT,"Calibration terminée !")
+				    self.zoneNotifs.tag_add("Error",0.0,tk.END)
+				
+				else:
+				    #print("Videz complètement la fumée !")
+				    # on affiche une notification
+				    self.zoneNotifs.delete(0.0,tk.END)
+				    self.zoneNotifs.insert(tk.INSERT,"Videz complètement la fumée !")
+				    self.zoneNotifs.tag_add("Ready",0.0,tk.END)
+			
+		    elif self.algo == 2:
+			self.flag = 4
 		
+		elif self.flag == 4:
+		    self.pot0 = 20 * float(arrayConcen[0]) + 5
+		    self.pot0 = int(str(int(self.pot0)),16)
+		    self.pot1 = self.pot0
+		    potars = [self.pot0,self.pot1,0x32,0x14]
+		    self.objetAnnexe.set_potars(potars)
+		    self.objetAnnexe.get_potars()
+		    self.flag = 5
+		
+		elif sefl.flag == 5:
+		    # On récupère la valeur de top et de bottom
+		    val1 = self.EntryTop.get() 
+		    val3 = self.concentration.get()
+		    val_pot0 = self.POTs[0].get()
+		    val_pot1 = self.POTs[1].get()
+		    if len(self.tops_temp) < 10:
+			try:
+			    if float(val3) == 1.2 and float(val1) != 0 and int(val_pot0,16) == self.pot0 and int(val_pot1,16) == self.pot1:
+				self.tops_temp.append(float(val1))
+				self.objetAnnexe.silence()
+			except:
+			    pass
+				    
+		    elif len(self.tops_temp) == 10:
+			self.flag = 6
+		
+		elif self.flag == 6:
+		    # on récupère top_second
+		    top_second = float(max(set(self.tops_temp),key=self.tops_temp.count))
+		    bottom_second = round(6.5 * (top_second/6 - bottom_prim) + bottom_prim,3)
+		    msg0 = "\nTop prévu après la calibration : "+str(top_second)+" +/- 0.01"
+		    msg1 = "\nBottom prévu après la calibration : "+str(bottom_second)+" +/- 0.005"
+		    msg2 = "\n----------"
+		    # on affiche une notification
+		    if not self.ok:
+			self.zoneNotifs.delete(0.0,tk.END)
+			self.zoneNotifs.insert(tk.INSERT,"Maintenez la concentration de fumée à 1.2 jusqu'à la fin de la calib\n")
+			self.zoneNotifs.insert(tk.INSERT,msg2)
+			self.zoneNotifs.insert(tk.INSERT,msg0)
+			self.zoneNotifs.insert(tk.INSERT,msg1)
+			self.zoneNotifs.tag_add("Done",0.0,tk.END)
+			self.top_voulu = top_second
+			self.bottom_voulu = bottom_second
+		    self.flag = 7
+		    
 		# On commence à ajuster les potars
-		elif self.flag ==  3:
-		    self.calibration()
-		    if self.ok:
+		elif self.flag ==  7:
+		    if not self.ok:
+			self.calibration_2()
+		    else:
 			#On fait set clear clear zero en s'assurant qu'il n'y a plus de fumée
 			valConf = self.concentration.get()
 			if valConf != '':
@@ -405,17 +441,122 @@ class AjustementPotars(threading.Thread):
 				self.zoneNotifs.tag_add("Error",0.0,tk.END)
 				
 			    else:
-				#print("Videz complètement la fumée !")
-				# on affiche une notification
 				self.zoneNotifs.delete(0.0,tk.END)
 				self.zoneNotifs.insert(tk.INSERT,"Videz complètement la fumée !")
 				self.zoneNotifs.tag_add("Ready",0.0,tk.END)
-	    
-			
-	    time.sleep(1)
+		time.sleep(1)
     	
+    def calibration_1(self):
+	global flag_calib
+	k1 = (0.2)/(0.03) #10.7 #0.1/0.03 #(0.2)/(0.03)
+	k2 = (0.1)/(0.3)
+	bus = can.interface.Bus()
+	top_prim = float(max(set(self.tops),key=self.tops.count))
+	bottom_prim = float(max(set(self.bottoms_temp),key=self.bottoms_temp.count))
+	#print("top = ",top_prim)
+	#print("bottom = ",bottom_prim)
 	
-    def calibration(self):
+	bottom_second = round(bottom_prim + k1*(0.1 - bottom_prim),3)
+	top_second = round(top_prim + k2*(0.6 - top_prim),3)
+	msg0 = "\nTop prévu après la calibration : "+str(top_second)+" +/- 0.01"
+	msg1 = "\nBottom prévu après la calibration : "+str(bottom_second)+" +/- 0.005"
+	msg2 = "\n----------"
+	msg3 = "\nTop avant calibration : "+str(top_prim)
+	msg4 = "\nBottom  avant calibration : "+str(bottom_prim)
+	###
+	# on affiche une notification
+	if not self.ok:
+	    self.zoneNotifs.delete(0.0,tk.END)
+	    self.zoneNotifs.insert(tk.INSERT,"Maintenez la concentration de fumée à 1.2 jusqu'à la fin de la calib\n")
+	    self.zoneNotifs.insert(tk.INSERT,msg0)
+	    self.zoneNotifs.insert(tk.INSERT,msg1)
+	    self.zoneNotifs.insert(tk.INSERT,msg2)
+	    self.zoneNotifs.insert(tk.INSERT,msg3)
+	    self.zoneNotifs.insert(tk.INSERT,msg4)
+	    self.zoneNotifs.tag_add("Done",0.0,tk.END)
+	    self.top_voulu = top_second
+	    self.bottom_voulu = bottom_second
+	try:
+	    # On récupère la valeur de top et de bottom
+	    val1 = self.EntryTop.get() 
+	    val2 = self.EntryBottom.get()
+	    val3 = self.concentration.get()
+	    if float(val3) == 1.2 and val1 !='' and val2!='':
+		# Potars durants la calibration
+		potars = []
+		for p in self.POTs:
+		    potars.append(int(p.get(),16))
+		print potars
+		valTop = float(val1)
+		valBottom = float(val2)
+	
+		# On règle l'ajustement des potars
+		if valBottom < self.bottom_voulu and (self.bottom_voulu - valBottom) > 0.005:
+		    if potars[2] < 0x96:
+			potars[2] += 1
+		    else:
+			if potars[0] < 0xA0:
+			    potars[0] += 1
+			else:
+			    potars[0] = 0x19
+			    potars[2] = 0x32
+		
+		elif valBottom > self.bottom_voulu and (valBottom - self.bottom_voulu) > 0.005:
+		    if potars[2] > 0x32:
+			potars[2] -= 1
+		    else:
+			if potars[0] > 0x19:
+			    potars[0] -= 1
+			else:
+			    potars[0] = 0x19
+			    potars[2] = 0x32
+			    
+		elif valTop < self.top_voulu and (self.top_voulu - valTop) > 0.01:
+		    if potars[3] < 0x5A:
+			potars[3] += 1
+			    
+		    else:
+			if potars[1] < 0xA0:
+			    potars[1] += 1
+			else:
+			    potars[1] = 0x19
+			    potars[3] = 0x14
+			    
+		elif valTop > self.top_voulu and (valTop - self.top_voulu) > 0.01:
+		    if potars[1] > 0x19:
+			potars[1] -= 1
+		    else:
+			if potars[3] > 0x14:
+			    potars[3] -= 1
+			else:
+			    potars[1] = 0x19
+			    potars[3] = 0x14
+	    
+		else:
+		    #flag_calib = 0
+		    self.ok = 1
+		    #self.progressBar.stop()
+		
+		#print("Potars ajustés: ", potars)
+		
+		#set potars
+		msg1 = can.Message(arbitration_id=0x06103403,
+                      data=[0x17, 0x0e, potars[0], potars[1], potars[2], potars[3], 0x00, 0x00],
+                      extended_id=True)
+		bus.send(msg1)
+		time.sleep(0.5)
+		# on demande la valeur des potars
+		msg = can.Message(arbitration_id=0x06103403,
+                      data=[0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+                      extended_id=True)
+		bus.send(msg)
+		
+	except:
+	    #print("Error")
+	    pass
+	time.sleep(1)
+    
+    def calibration_2(self):
 	global flag_calib
 	bus = can.interface.Bus()
 	try:
@@ -496,7 +637,7 @@ class AjustementPotars(threading.Thread):
 	except:
 	    #print("Error")
 	    pass
-	time.sleep(1)
+	#time.sleep(1)
 	
     
     def notification(self,arg):
@@ -514,7 +655,7 @@ class AjustementPotars(threading.Thread):
     def set_flag(self):
 	global flag_calib
 	flag_calib = 1
-	#self.flag = 1
+	self.flag = 1
 	
     def stop(self):
 	global flag_calib

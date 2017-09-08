@@ -272,7 +272,7 @@ class Calibration(Frame):
 	#self.canvas2.grid(padx=2,pady=2,row=0,column=1)
 	
 	# Bouton calibrer
-	self.boutonCalibrer=Button(self.fenetre2,text="CALIBRER",bd=2, width=60, relief=RAISED, overrelief=RIDGE, bg=buttonColor, command=self.calibration)
+	self.boutonCalibrer=Button(self.fenetre2,text="CALIBRER",bd=2, width=60, relief=RAISED, overrelief=RIDGE, bg=buttonColor, command=self.calibration_2)
         self.boutonCalibrer.pack(pady=5, side=TOP)
 	
     ########## On désactive les widgets avant le démarrage
@@ -299,7 +299,7 @@ class Calibration(Frame):
 	self.boutonContinuer.configure(state='normal', command=self.continuer_calib)
 	self.enable_fenetre(self.fenetre2)
 	# On desactive le bouton Calibrer
-	self.boutonCalibrer.configure(state='disabled')
+	#self.boutonCalibrer.configure(state='disabled')
 	# On desactive le bouton RefReading
 	self.boutonRefReading.configure(state='disabled')
 	# On desactive le bouton StartCalib
@@ -363,6 +363,29 @@ class Calibration(Frame):
 	    
 	self.boutonRefReading.configure(state='disabled')
 	
+    #######################################################
+    
+    
+    def calibration_2(self):
+	self.objetAnnexe = classes.Annexes()
+	concentration = self.Concentration.get()
+	self.notifZone.tag_configure("Done",font=('Helvetica', 10, 'bold'), foreground='#03224C')
+	if concentration !='':
+	    if abs(float(concentration)) == 0 or abs(float(concentration)) == 0.1:
+		#On désactive le bouton
+		self.boutonCalibrer.configure(state='disabled')
+		#On efface Tout
+		self.clear_table()
+		# On initialise les potars 19 19 32 14
+		potars = [0x19,0x19,0x32,0x14]
+		self.objetAnnexe.set_potars(potars)
+		self.objetAnnexe.get_potars()
+		# On commence à ajuster les potars
+		self.thread_cal.set_flag()
+	    else:
+		showerror("Fumée!","Videz totalement la fumée")
+	else:
+	    showerror("Fumée!","Videz totalement la fumée")
      #######################################################
     
     
@@ -381,7 +404,7 @@ class Calibration(Frame):
 	    else:
 		flag = False
 	if flag:
-		
+		i
 		# On désactive le bouton
 		self.boutonCalibrer.configure(state='disabled')
 		# on affiche une notification
