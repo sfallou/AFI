@@ -279,7 +279,19 @@ class TerminalLog(threading.Thread):
 	flag_terminal_log = 0
 
 
-#############################################
+####################################################################################
+# Cette classe dénommée AjustementPotars est le thread qui va faire le calibrage 
+# Il prend en arguments :
+    # concen: le champs qui affiche la concentration de fumée
+    # potars : une liste contenant les 4 champs qui affichent les potars
+    # top: le champ qui affiche la valeur de Top
+    # bottom : le champ qui affiche la valeur de bottom
+    # progressBar : la barre de progression qui signale le déroulement du programme
+    # zoneNotif : La zone de text oû l'on affiche les différentes notification
+    # waitZone : le champ de text qui va afficher "Calibration en cours ..."
+    # boutonCal : le bouton Calibrer ( c'est pour l'activer ou le desactiver aux moments opportuns)
+# Cette classe tourne en boucle dès qu'elle est lancée
+###################################################################################
 class AjustementPotars(threading.Thread):
     def __init__(self,concen,potars,top,bottom,progressBar,zoneNotif, waitZone,boutonCal):
         threading.Thread.__init__(self)
@@ -291,24 +303,23 @@ class AjustementPotars(threading.Thread):
 	self.zoneNotifs = zoneNotif
 	self.waitZone = waitZone
 	self.boutonCalibrer = boutonCal
-	self.flag = 1
+	self.flag = 1 # ce flag servira de condition de test lors des differentes phases de la calibration
+	
     def run(self):
-	global flag_calib_log, flag_calib, Tops, Bottoms
-	self.ecart_tops = []
-	self.ecart_bottoms = []
-	self.ok = 0
-	self.objetAnnexe = Annexes()
-	#while self.flag:
+	global flag_calib_log, flag_calib, Tops, Bottoms # ce sont des variables globales qui sont partagées par toutes les classes
+	self.ok = 0 # une sorte de flag qui permet de vérifier si la calibration est terminée ou pas
+	self.objetAnnexe = Annexes() # un objet de la classe Annexe qui va nous servir réaliser des opérations répétitives
+	# Tant que flag_calib_log vaut 1 (ce qui est toujours le cas lorsqu'on démarre le test de fumée), la boucle tourne 
 	while flag_calib_log:
-	    if flag_calib:
-		self.progressBar.start()
-		self.waitZone.configure(text="Calibration en Cours....")
-		if len(Tops) < 20:
+	    if flag_calib: # si on est en mode calibration
+		self.progressBar.start() # On démarre la barre de progression
+		self.waitZone.configure(text="Calibration en Cours....") #on affiche aussi l'indication que la calib est en ccours
+		if len(Tops) < 20: # Si on a acquis moins de 20 valeurs de Top et bottom, on fait rien mais ces acquisitions continuent de se faire
 		    pass
-		else:
-		    self.calibration()
-		    if self.ok:
-			#On fait set clear clear zero en s'assurant qu'il n'y a plus de fumée
+		else: # sinon, c-a-d qu'on a assez de valeurs pour choisir le bon Top et le bon Bottom
+		    self.calibration() # on appelle la fonction calibration qui sert principalement à ajuster les potars
+		    if self.ok:      # si l'ajustement est bonne, on arrête d'ajuster et on écrit les valeurs de potars obtenues
+			#On fait set clear clear zero en s'assurant qu'il n'y ait plus de fumée
 			valConf = self.concentration.get()
 			if valConf != '':
 			    if abs(float(valConf)) == 0.1 or abs(float(valConf)) == 0:
@@ -334,21 +345,28 @@ class AjustementPotars(threading.Thread):
 				self.zoneNotifs.insert(tk.INSERT,"Videz complètement la fumée !")
 				self.zoneNotifs.tag_add("Ready",0.0,tk.END)
 		    
-    	
+    ### la fonction qui calcul les tops et bottoms souhaités et ajuste les potars 
+    
     def calibration(self,):
 	global flag_calib, Tops, Bottoms
+	# si alarm_Lav_on supérieur ou égale à 2, on est dans le cas des smokes peu sensibles
+	#on fixe les paramètres qui vont permettre de calculer convenablement les valeurs de top et bottom voulus
 	if float(arrayConcen[0]) >= 2:
 	    k = 10
 	    coef1 = 1
 	    coef2 = 6.5
+	# Sinon, on est dans le cas des smokes très sensibles et on changes les paramètres 
 	else:
 	    k = 5
 	    coef1 = (0.1)/(0.3)
 	    coef2 = (0.25)/(0.03)
+	# on récupère les valeurs de top et de bottom les plus récurrentes lorsque la concentration=1.2 et les potars 19-19-32-14
 	top_prim = float(max(set(Tops),key=Tops.count))
 	bottom_prim = float(max(set(Bottoms),key=Bottoms.count))
+	# On calcule les valeurs de top et bottom voulues pendant la calibration
 	bottom_second = round(bottom_prim + coef2 * (0.1 - bottom_prim),3)
 	top_second = round(top_prim + coef1*(0.6 - top_prim),3)
+	# On définit les messages qu'on va afficher pour informer l'opérateur
 	msg0 = "\nTop prévu après la calibration : "+str(top_second)+" +/- 0.05"
 	msg1 = "\nBottom prévu après la calibration : "+str(bottom_second)+" +/- 0.005"
 	msg2 = "\n----------"
@@ -356,7 +374,7 @@ class AjustementPotars(threading.Thread):
 	msg4 = "\nBottom  avant calibration : "+str(bottom_prim)
 	###
 	# on affiche une notification
-	if not self.ok:
+	if not self.ok: 
 	    self.zoneNotifs.delete(0.0,tk.END)
 	    self.zoneNotifs.insert(tk.INSERT,"Maintenez la concentration de fumée à 1.2 jusqu'à la fin de la calib\n")
 	    self.zoneNotifs.insert(tk.INSERT,msg0)
@@ -367,16 +385,16 @@ class AjustementPotars(threading.Thread):
 	    self.zoneNotifs.tag_add("Done",0.0,tk.END)
 	    self.top_voulu = top_second
 	    self.bottom_voulu = bottom_second
-	try:
-	    # On initialise avec les potars de départs
-	    if self.flag:
+	try
+	    if self.flag: # si ce flag vaut 1 (vrai pour le premier tour de boucle), on définit les potars de départ et on fait "set"
 		self.pot0 = 20 * float(arrayConcen[0]) + k
 		self.pot0 = int(str(int(self.pot0)),16)
 		self.pot1 = self.pot0
 		potars = [self.pot0,self.pot1,0x32,0x14]
 		self.set_potars(potars)
-		self.flag = 0
+		self.flag = 0 # permet de ne plus revenir sur le if précédent
 		time.sleep(5)
+	    
 	    # On récupère la valeur de top et de bottom
 	    val1 = self.EntryTop.get() 
 	    val2 = self.EntryBottom.get()
@@ -434,20 +452,16 @@ class AjustementPotars(threading.Thread):
 			    potars[3] = 0x14
 	    
 		else:
-		    #flag_calib = 0
-		    self.ok = 1
-		    #self.progressBar.stop()
-		
-		#print("Potars ajustés: ", potars)
-		
+		    self.ok = 1 # c'est à dire que l'ajustement est fini
+		    
 		#set potars
 		self.set_potars(potars)
 		
 	except:
-	    #print("Error")
 	    pass
 	time.sleep(1)
     
+    # la fonction qui permet d'écrire les potars (set uniquement)
     def set_potars(self,potars):
 	bus = can.interface.Bus()
 	msg1 = can.Message(arbitration_id=0x06103403,
@@ -461,11 +475,12 @@ class AjustementPotars(threading.Thread):
 		extended_id=True)
 	bus.send(msg)
 	
+    # La fonction qui donne le départ de la calibration. C'est elle qui est appelée par le bouton calibrer
     def set_flag(self):
 	global flag_calib
 	flag_calib = 1
 	self.flag = 1
-	
+    # La fonction qui permet d'arrêter l'ajustement et le calibrage
     def stop(self):
 	global flag_calib
 	self.ok = 0
@@ -520,16 +535,7 @@ class CalibrationLog(threading.Thread):
 	except can.CanError:
 	    print("Message NOT sent")
 	    
-        """while flag_calib_log:
-	    os.system('sudo /usr/local/bin/natinst/rpi/aiondemand -c 0 -s 100 -t 1 -v | tee tmp.txt > tmp2.txt')
-	    file = open("tmp.txt","rb")
-	    resultat = float(file.readlines()[-1].replace(",",""))
-	    file.close()
-	    self.concentration.delete(0,tk.END)
-	    y = round(resultat,4)
-	    self.x = round(-(y-self.k)/0.0257,1)
-	    self.concentration.insert(0,self.x)
-	"""
+       
 	while flag_calib_log:
 	    os.system('sudo /usr/local/bin/natinst/rpi/aiondemand -c 0 -s 500 -t 1 -v | tee tmp.txt > tmp2.txt')
 	    file = open("tmp.txt","rb")
