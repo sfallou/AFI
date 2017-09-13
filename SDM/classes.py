@@ -353,12 +353,12 @@ class AjustementPotars(threading.Thread):
 	#on fixe les paramètres qui vont permettre de calculer convenablement les valeurs de top et bottom voulus
 	if float(arrayConcen[0]) >= 2:
 	    k = 10
-	    coef1 = 1
+	    coef1 = 1.3
 	    coef2 = 6.5
 	# Sinon, on est dans le cas des smokes très sensibles et on changes les paramètres 
 	else:
 	    k = 5
-	    coef1 = (0.1)/(0.3)
+	    coef1 =  (0.15)/(0.3)#(0.1)/(0.3)
 	    coef2 = (0.25)/(0.03)
 	# on récupère les valeurs de top et de bottom les plus récurrentes lorsque la concentration=1.2 et les potars 19-19-32-14
 	top_prim = float(max(set(Tops),key=Tops.count))
@@ -385,7 +385,7 @@ class AjustementPotars(threading.Thread):
 	    self.zoneNotifs.tag_add("Done",0.0,tk.END)
 	    self.top_voulu = top_second
 	    self.bottom_voulu = bottom_second
-	try
+	try:
 	    if self.flag: # si ce flag vaut 1 (vrai pour le premier tour de boucle), on définit les potars de départ et on fait "set"
 		self.pot0 = 20 * float(arrayConcen[0]) + k
 		self.pot0 = int(str(int(self.pot0)),16)
